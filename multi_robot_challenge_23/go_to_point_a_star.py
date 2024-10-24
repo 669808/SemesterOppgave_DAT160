@@ -30,8 +30,8 @@ class GoToPointController(Node):
         qos_profile = QoSProfile(reliability=QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_RELIABLE,
                                 history=QoSHistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_LAST,
                                 durability=QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL,
-                                depth=5,
-        )
+                                depth=5,)
+
         self.create_subscription(
             OccupancyGrid, 
             '/map', 

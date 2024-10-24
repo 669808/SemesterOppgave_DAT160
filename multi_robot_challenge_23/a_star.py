@@ -54,29 +54,24 @@ class AStar:
         path.reverse()
         return path
 
-        
     def a_star_search(self, grid, start, goal):
-        # Check if the source and goal are valid
         if not self.is_valid(start[0], start[1]) or not self.is_valid(goal[0], goal[1]):
-            print("Source or goal is invalid")
+            print("Sourc/goal is invalid")
             return
 
-        # Check if the source and goal are unblocked
         if not self.no_obstacle(grid, start[0], start[1]) or not self.no_obstacle(grid, goal[0], goal[1]):
-            print("Source or the goal is blocked")
+            print("Either the start or destination is blocked")
             return
 
-        # Check if we are already at the goal
         if self.is_destination(start[0], start[1], goal):
-            print("We are already at the goal")
+            print("Bot is at the goal")
             return
 
-        # Initialize the closed list (visited cells)
+        # Visited cells
         closedlist = [[False for _ in range(self.column)] for _ in range(self.row)]
-        # Initialize the details of each cell
+
         cell_details = [[Cell() for _ in range(self.column)] for _ in range(self.row)]
 
-        # Initialize the start cell details
         i = start[0]
         j = start[1]
         cell_details[i][j].f = 0
@@ -91,43 +86,35 @@ class AStar:
 
         # Main loop of A* search algorithm
         while len(open_list) > 0:
-            # Pop the cell with the smallest f value from the open list
             p = heapq.heappop(open_list)
-
-            # Mark the cell as visited
             i = p[1]
             j = p[2]
             closedlist[i][j] = True
 
-            # For each direction, check the successors
+            # Check successors for every direction
             directions = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]
             for dir in directions:
                 new_i = i + dir[0]
                 new_j = j + dir[1]
 
-                # If the successor is valid, unblocked, and not visited
                 if self.is_valid(new_i, new_j) and self.no_obstacle(grid, new_i, new_j) and not closedlist[new_i][new_j]:
-                    # If the successor is the goal
                     if self.is_destination(new_i, new_j, goal):
                         # Set the parent of the goal cell
                         cell_details[new_i][new_j].parent_i = i
                         cell_details[new_i][new_j].parent_j = j
                         print("The goal cell is found")
-                        # Trace and print the path from source to goal
+                        # Trace the path back and return it
                         path = self.find_path(cell_details, goal[0], goal[1])
                         found_dest = True
                         return path
                     else:
-                        # Calculate the new f, g, and h values
+                        # Calculate f, g, and h
                         g_new = cell_details[i][j].g + 1.0
                         h_new = self.calculate_h_value(new_i, new_j, goal)
                         f_new = g_new + h_new
 
-                        # If the cell is not in the open list or the new f value is smaller
                         if cell_details[new_i][new_j].f == float('inf') or cell_details[new_i][new_j].f > f_new:
-                            # Add the cell to the open list
                             heapq.heappush(open_list, (f_new, new_i, new_j))
-                            # Update the cell details
                             cell_details[new_i][new_j].f = f_new
                             cell_details[new_i][new_j].g = g_new
                             cell_details[new_i][new_j].h = h_new
