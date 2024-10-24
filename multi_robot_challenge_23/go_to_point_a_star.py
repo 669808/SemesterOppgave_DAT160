@@ -1,6 +1,5 @@
 import rclpy
 import math
-import time
 from interfaces.srv import MoveTarget
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
@@ -16,20 +15,15 @@ class GoToPointController(Node):
 
     def __init__(self):
         super().__init__('go_to_point')
+        self.namespace = self.get_namespace()
         self.cmd_vel_publisher = self.create_publisher(
             Twist, 
-            '/cmd_vel', 
+            f'{self.namespace}/cmd_vel', 
             10)
-        
-        self.subscription_goal = self.create_subscription(
-            PoseStamped,
-            '/move_base_simple/goal',
-            self.pose_calc,
-            10)
-        
+
         self.subscription_odom = self.create_subscription(
             Odometry,
-            '/odom',
+            f'{self.namespace}/odom',
             self.odom_callback,
             10)
         
@@ -38,7 +32,11 @@ class GoToPointController(Node):
                                 durability=QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL,
                                 depth=5,
         )
-        self.create_subscription(OccupancyGrid, '/map', callback=self.clbk_map, qos_profile=qos_profile)
+        self.create_subscription(
+            OccupancyGrid, 
+            '/map', 
+            callback=self.clbk_map, 
+            qos_profile=qos_profile)
 
         self.map_data = None
         self.a_star_class = AStar()
@@ -92,11 +90,6 @@ class GoToPointController(Node):
         (roll, pitch, yaw) = euler_from_quaternion(orientation_list)
         self.yaw = yaw
 
-    def pose_calc(self, msg):
-        self.current_goal_x = msg.pose.position.x
-        self.current_goal_y = msg.pose.position.y
-        print('Go-to-goal goals: ', self.current_goal_x,' and ' ,self.current_goal_y)
-
     def normalize_angle(self, angle):
         return (angle + math.pi) % (2 * math.pi) - math.pi
 
@@ -119,22 +112,26 @@ class GoToPointController(Node):
         self.arrived_at_goal = True
 
     def handle_service(self, request, response):
+        success = True
         self.go_to_goal_switch = request.move_switch
+        self.arrived_at_goal = False
         self.goal_x = request.target_position.x
         self.goal_y = request.target_position.y
         current = (self.current_x, self.current_y)
         goal = (self.goal_x, self.goal_y)
-        self.path = self.a_star_class.a_star_search(self.map_data, current, goal)
-        next_goal = self.path.pop(0)
-        self.current_goal_x = next_goal[0]
-        self.current_goal_y = next_goal[1]
-        response.success = self.arrived_at_goal
-        self.get_logger().info(f'Go-to-point switch has been set to {self.switch}')
+        if self.map_data is not None:
+            self.path = self.a_star_class.a_star_search(self.map_data, current, goal)
+            next_goal = self.path.pop(0)
+            self.current_goal_x = next_goal[0]
+            self.current_goal_y = next_goal[1]
+        else:
+            success = False
+        response.success = success
+        self.get_logger().info(f'Go-to-point switch has been set to {self.go_to_goal_switch}')
         return response
 
     def timer_callback(self):
         if(self.go_to_goal_switch):
-            
             distance_to_goal = sqrt(pow((self.current_goal_x - self.current_x), 2) + pow((self.current_goal_y - self.current_y), 2))
             desired_yaw = math.atan2(
                         self.current_goal_y - self.current_y,
@@ -149,7 +146,7 @@ class GoToPointController(Node):
                 else:
                     self.get_logger().info('Goal reached!')
                     self.stop_robot()
-                    self.destroy_timer(self.timer)
+                    self.go_to_goal_switch = False
                     return
                 
             if (abs(self.normalize_angle(desired_yaw)-self.normalize_angle(self.yaw)) > self.yaw_tolerance):
