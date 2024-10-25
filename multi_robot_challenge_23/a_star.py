@@ -1,5 +1,6 @@
 import math
 import heapq
+from geometry_msgs import Point
 
 # Define the Cell class
 class Cell:
@@ -40,8 +41,20 @@ class AStar:
         #Manhattan distance. Might be better ??
         #return math.abs(row – goal[0]) + math.abs(column – goal[1])
 
+    #Takes the row and column of the occupancy grid and returns a "real world" point represented by x and y.
+    def get_world_pos(self, x, y, map):
+        return (map.info.origin.position.x + y*map.info.resolution,
+                map.info.origin.position.y + x*map.info.resolution)
+    
+    #Takes a point and converts it into corresponding row and column in the occupancy grid
+    def get_map_coords(self, point, map):
+        x = int((point[1] - map.info.origin.position.y) / map.info.resolution)
+        y = int((point[0] - map.info.origin.position.x) / map.info.resolution)
+        return [x, y]
+
+
     # Trace the path from source to goal
-    def find_path(self, cell_details, goal_x, goal_y):
+    def find_path(self, cell_details, goal_x, goal_y, grid):
         path = []
         while not (cell_details[goal_x][goal_y].parent_i == goal_x and cell_details[goal_x][goal_y].parent_j == goal_y):
             path.append((goal_x, goal_y))
@@ -52,9 +65,17 @@ class AStar:
 
         path.append((goal_x, goal_y))
         path.reverse()
+
+        for point in path:
+            point = self.get_world_pos(point[0], point[1], grid)
+
         return path
 
     def a_star_search(self, grid, start, goal):
+
+        start = self.get_map_coords(start, grid)
+        goal = self.get_map_coords(goal, grid)
+
         if not self.is_valid(start[0], start[1]) or not self.is_valid(goal[0], goal[1]):
             print("Sourc/goal is invalid")
             return
@@ -104,7 +125,7 @@ class AStar:
                         cell_details[new_i][new_j].parent_j = j
                         print("The goal cell is found")
                         # Trace the path back and return it
-                        path = self.find_path(cell_details, goal[0], goal[1])
+                        path = self.find_path(cell_details, goal[0], goal[1], grid)
                         found_dest = True
                         return path
                     else:
