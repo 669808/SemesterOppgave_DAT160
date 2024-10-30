@@ -2,6 +2,7 @@ import rclpy
 from rclpy import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy, QoSDurabilityPolicy
 from nav_msgs.msg import OccupancyGrid
+from interfaces.srv import FrontierRequest
 
 
 class FrontierBasedSearch(Node):
@@ -25,6 +26,8 @@ class FrontierBasedSearch(Node):
 
         self.frontier_list = []
 
+        self.srv = self.create_service(FrontierRequest, 'frontier_based_search', self.handle_service)
+
     def create_frontier_map(self):
         if not self.map_adjusted:
             x = 1
@@ -45,28 +48,34 @@ class FrontierBasedSearch(Node):
         self.map_data = grid
 
     def handle_service(self, request, response):
-        # TODO: If the request is a position requirement the nearest frontier will be returned.
-        # If not, it is a position update. The robot has reaced the frontier and transmits data to the
-        # service to update the map.
-        # 
-        if(request.needFrontier):
-            response.nearestPos = self.find_nearest_frontier(request.robotPos)
-            response.success = True
-        else:
-            response.nearestPos = None
-            response.success = self.update_frontier_map(request.data)
+        # TODO: Each time a request is sent, this service should recieve sensor data to update the map in addition to
+        # the position of the robot. The map is updated and a new frontier is returned
+        response.success = self.update_frontier_map(request.data, request.robot_pos)
+        if response.success:
+            response.frontier = self.find_nearest_frontier(request.robot_pos)
         return response
 
     # Method to find the nearest frontier of a robot
     def find_nearest_frontier(self, robot_pos):
         return 
     
-    def update_frontier_map(self, data):
+    def update_frontier_map(self, data, robot_current_pos):
         success = True
         # TODO: Take the data from the robot and update the frontier map. The existing frontier that was reached
         # needs to be removed and the new frontiers need to be calculated.
         return success
 
     
+def main(args=None):
+    rclpy.init(args=args)
+    FBS = FrontierBasedSearch()
+    
+    rclpy.spin(FBS)
+
+    FBS.destroy_node()
+    rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
 
 

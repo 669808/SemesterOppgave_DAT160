@@ -1,6 +1,5 @@
 import math
 import heapq
-from geometry_msgs import Point
 
 # Define the Cell class
 class Cell:
@@ -64,12 +63,14 @@ class AStar:
             goal_y = temp_col
 
         path.append((goal_x, goal_y))
-        path.reverse()
 
+        world_pos_path = []
         for point in path:
             point = self.get_world_pos(point[0], point[1], grid)
+            world_pos_path.append(point)
+        world_pos_path.reverse()
 
-        return path
+        return world_pos_path
 
     def a_star_search(self, grid, start, goal):
 
