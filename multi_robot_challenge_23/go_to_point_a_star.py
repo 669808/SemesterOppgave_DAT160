@@ -15,15 +15,16 @@ class GoToPointController(Node):
 
     def __init__(self):
         super().__init__('go_to_point')
-        self.namespace = self.get_namespace()
+        self.declare_parameter('namespace')
+        self.namespace = self.get_parameter('namespace').get_parameter_value().string_value        
         self.cmd_vel_publisher = self.create_publisher(
             Twist, 
-            f'{self.namespace}cmd_vel', 
+            f'{self.namespace}/cmd_vel', 
             10)
 
         self.subscription_odom = self.create_subscription(
             Odometry,
-            f'{self.namespace}odom',
+            f'{self.namespace}/odom',
             self.odom_callback,
             10)
         
@@ -63,7 +64,8 @@ class GoToPointController(Node):
 
         #Server switch and initialization
         self.go_to_goal_switch = False
-        self.srv = self.create_service(SetGoal, 'set_goal', self.handle_service)
+        self.srv = self.create_service(SetGoal, f'{self.namespace}_go_to_point_service', self.handle_service)
+        print("Service is running for: ", self.namespace)
 
         timer_period = 0.1
         self.timer = self.create_timer(timer_period, self.timer_callback) 
@@ -128,7 +130,7 @@ class GoToPointController(Node):
         else:
             success = False
         response.success = success
-        self.get_logger().info(f'Go-to-point switch has been set to {self.go_to_goal_switch}')
+        print(f'Go-to-point switch has been set to {self.go_to_goal_switch}')
         return response
 
     def timer_callback(self):

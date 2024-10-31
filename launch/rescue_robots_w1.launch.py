@@ -85,18 +85,18 @@ def generate_launch_description():
     )
 
     #Starting the services for each turtlebot
-    go_to_point_server_tb3_0 = Node(
-        package='multi_robot_challenge_23',
-        executable='go_to_point_a_star',
-        name='tb3_0_go_to_point_service',
-        namespace=first_tb3
-    )
-    go_to_point_server_tb3_1 = Node(
-        package='multi_robot_challenge_23',
-        executable='go_to_point_a_star',
-        name='tb3_1_go_to_point_service',
-        namespace=second_tb3
-    )
+    # go_to_point_server_tb3_0 = Node(
+    #     package='multi_robot_challenge_23',
+    #     executable='go_to_point_a_star',
+    #     name='tb3_0_go_to_point_service',
+    #     namespace=first_tb3
+    # )
+    # go_to_point_server_tb3_1 = Node(
+    #     package='multi_robot_challenge_23',
+    #     executable='go_to_point_a_star',
+    #     name='tb3_1_go_to_point_service',
+    #     namespace=second_tb3
+    # )
     
     # Starting rviz
     rviz_node = Node(
@@ -115,7 +115,7 @@ def generate_launch_description():
         lifecycle_manager,
         tb3_0,
         tb3_1,
-        go_to_point_server_tb3_0,
-        go_to_point_server_tb3_1,
+        #go_to_point_server_tb3_0,
+        #go_to_point_server_tb3_1,
         rviz_node,
     ])

@@ -19,7 +19,7 @@ class CentralController(Node):
             SetGoal,
             'tb3_1_go_to_point_service',
         )
-
+        
         self.client_frontier_based_search = self.create_client(
             FrontierRequest,
             'frontier_based_search' 
@@ -63,7 +63,6 @@ class CentralController(Node):
             self.get_logger().error(f'Error: {e}')
 
     def timer_callback(self):
-        print('Yo')
         if not self.requestsent:
             self.send_gotopoint_request(True, 2.0, 2.0)
             self.requestsent = True
