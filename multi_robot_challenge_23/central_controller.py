@@ -1,3 +1,4 @@
+#usr/bin/python3
 import rclpy
 from rclpy.node import Node
 
@@ -62,9 +63,11 @@ class CentralController(Node):
             self.get_logger().error(f'Error: {e}')
 
     def timer_callback(self):
+        print('Yo')
         if not self.requestsent:
             self.send_gotopoint_request(True, 2.0, 2.0)
             self.requestsent = True
+            print('Request sent')
 
 
 def main(args=None):

@@ -1,13 +1,13 @@
 import rclpy
 import math
-from interfaces.srv import MoveTarget
+from interfaces.srv import SetGoal
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import PoseStamped
 from math import atan2, sqrt, pow
 from tf_transformations import euler_from_quaternion
-from a_star import AStar
+from .a_star import AStar
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy, QoSDurabilityPolicy
 from nav_msgs.msg import OccupancyGrid
 
@@ -18,12 +18,12 @@ class GoToPointController(Node):
         self.namespace = self.get_namespace()
         self.cmd_vel_publisher = self.create_publisher(
             Twist, 
-            f'{self.namespace}/cmd_vel', 
+            f'{self.namespace}cmd_vel', 
             10)
 
         self.subscription_odom = self.create_subscription(
             Odometry,
-            f'{self.namespace}/odom',
+            f'{self.namespace}odom',
             self.odom_callback,
             10)
         
@@ -39,7 +39,7 @@ class GoToPointController(Node):
             qos_profile=qos_profile)
 
         self.map_data = None
-        self.a_star_class = AStar()
+        self.a_star_class = None
         self.path=[]
 
         self.goal_x = 0.0
@@ -63,7 +63,7 @@ class GoToPointController(Node):
 
         #Server switch and initialization
         self.go_to_goal_switch = False
-        self.srv = self.create_service(MoveTarget, 'set_goal', self.handle_service)
+        self.srv = self.create_service(SetGoal, 'set_goal', self.handle_service)
 
         timer_period = 0.1
         self.timer = self.create_timer(timer_period, self.timer_callback) 
@@ -80,6 +80,7 @@ class GoToPointController(Node):
                 grid[i][j] = occupancy_grid[index]
 
         self.map_data = grid
+        self.a_star_class = AStar(map_height, map_width)
 
     def odom_callback(self, msg):
         self.current_x = msg.pose.pose.position.x
