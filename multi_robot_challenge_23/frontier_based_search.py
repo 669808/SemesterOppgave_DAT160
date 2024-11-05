@@ -3,6 +3,7 @@ from rclpy import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy, QoSDurabilityPolicy
 from nav_msgs.msg import OccupancyGrid
 from interfaces.srv import FrontierRequest
+from collections import deque
 
 
 class FrontierBasedSearch(Node):
@@ -29,15 +30,23 @@ class FrontierBasedSearch(Node):
 
         self.srv = self.create_service(FrontierRequest, 'frontier_based_search', self.handle_service)
 
+    #Updated the create_frontier map
     def create_frontier_map(self):
-        if not self.map_adjusted and self.map_data is not None:
-            # TODO: Take the map read from the '/map'-topic and convert it to a frontier map.
-            # We have to convert all cells that have no obstacles to take the value -1, so we have a unexplore map.
-            for i in range(len(self.map_data)):
-                for j in range(len(self.map_data[0])):
-                    if self.map_data[i][j] == 0:
-                        self.map_data[i][j] = -1
-            self.map_adjusted = True
+        if self.map_data is None:
+            return
+
+        #Iterate over the map data to create a frontier map
+        frontier_map = []
+        for i in range(len(self.map_data)):
+            for j in range(len(self.map_data[i])):
+                if self.map_data[i][j] == -1:  # If the cell is unexplored
+                    #Check if it borders a known space (value >= 0)
+                    if any(self.map_data[ni][nj] >= 0 for ni, nj in self.get_neighbors(i, j)):
+                        frontier_map.append((i, j))
+
+        self.frontier_list = frontier_map
+        self.map_adjusted = True
+
     
     def clbk_map(self, msg):
         if self.map_data is None:
@@ -53,6 +62,17 @@ class FrontierBasedSearch(Node):
 
             self.map_data = grid
 
+    #defined a get_neighbour function
+    def get_neighbours(self, x, y):
+        neighbors = [
+         (x - 1, y), (x + 1, y), 
+            (x, y - 1), (x, y + 1)
+     ]
+        #Filter out neighbors that are out of bounds
+        return [(nx, ny) for nx, ny in neighbors if 0 <= nx < len(self.map_data) and 0 <= ny < len(self.map_data[0])]
+
+
+
     def handle_service(self, request, response):
         # TODO: Each time a request is sent, this service should recieve sensor data to update the map in addition to
         # the position of the robot. The map is updated and a new frontier is returned
@@ -61,7 +81,7 @@ class FrontierBasedSearch(Node):
             response.frontier = self.find_nearest_frontier(request.robot_pos)
         return response
 
-    # Method to find the nearest frontier of a robot
+    #Method to find the nearest frontier of a robot
     def find_nearest_frontier(self, robot_pos):
         nearest_frontier = None
         min_distance = float('inf')
@@ -76,70 +96,52 @@ class FrontierBasedSearch(Node):
 
     def update_frontier_map(self, data, robot_current_pos):
         success = True
-        # TODO: Take the data from the robot and update the frontier map. The existing frontier that was reached
-        # needs to be removed and the new frontiers need to be calculated.
-        
-        
+
+        #Update map data with the latest sensor data
+        #TODO add logic to process 'data' and integrate it into self.map_data)
+        for sensor_reading in data:
+            
+            x_offset, y_offset, occupancy_value = sensor_reading
+
+            #Calculate absolute map position based on the robot's current position
+            map_x = robot_current_pos[0] + x_offset
+            map_y = robot_current_pos[1] + y_offset
+
+            #Ensure the calculated position is within the map bounds
+            if 0 <= map_x < len(self.map_data) and 0 <= map_y < len(self.map_data[0]):
+                self.map_data[map_x][map_y] = occupancy_value
+
+        #Remove the reached frontier
+        self.frontier_list = [f for f in self.frontier_list if f != robot_current_pos]
+
+        #recalculate frontiers
+        self.create_frontier_map()
+
         return success
 
-      
-    def find_frontiers(self):
-        frontiers = []
-        map_data = self.map_data
-        visited = [[False for _ in range(len(map_data[0]))] for _ in range(len(map_data))]
 
-        for i in range(len(map_data)):
-            for j in range(len(map_data[0])):
-                if map_data[i][j] == -1 and self.is_border_cell(map_data, i, j) and not visited[i][j]:
-                    frontier_group = self.flood_fill(map_data, visited, i, j)
-                    if frontier_group:
-                        centroid = self.calculate_centroid(frontier_group)
-                        frontiers.append(centroid)
-        
-        self.frontiers = frontiers
-        return frontiers
+    def find_nearest_frontier(self, robot_pos):
+        if not self.frontier_list:
+            return None
 
-    def is_border_cell(self, map_data, x, y):
-        neighbors = [
-            (x-1, y), (x+1, y), 
-            (x, y-1), (x, y+1)
-        ]
-        
-        for nx, ny in neighbors:
-            if 0 <= nx < len(map_data) and 0 <= ny < len(map_data[0]):
-                if map_data[nx][ny] != -1:
-                    return True
-        return False
+        #Use a BFS approach to find the nearest frontier
+        queue = deque([robot_pos])
+        visited = set()
+        visited.add(robot_pos)
 
-    def flood_fill(self, map_data, visited, x, y):
-        frontier_group = []
-        stack = [(x, y)]
-        
-        while stack:
-            cx, cy = stack.pop()
-            if visited[cx][cy]:
-                continue
-            visited[cx][cy] = True
-            frontier_group.append((cx, cy))
-            
-            neighbors = [
-                (cx-1, cy), (cx+1, cy), 
-                (cx, cy-1), (cx, cy+1)
-            ]
-            
-            for nx, ny in neighbors:
-                if 0 <= nx < len(map_data) and 0 <= ny < len(map_data[0]):
-                    if map_data[nx][ny] == -1 and self.is_border_cell(map_data, nx, ny) and not visited[nx][ny]:
-                        stack.append((nx, ny))
-        
-        return frontier_group
+        while queue:
+            current_pos = queue.popleft()
+            if current_pos in self.frontier_list:
+                return current_pos
 
-    def calculate_centroid(self, frontier_group):
-        x_sum = sum([x for x, _ in frontier_group])
-        y_sum = sum([y for _, y in frontier_group])
-        count = len(frontier_group)
-        return (x_sum // count, y_sum // count)
+            for neighbor in self.get_neighbors(*current_pos):
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    queue.append(neighbor)
 
+        return None
+
+    
 def main(args=None):
     rclpy.init(args=args)
     FBS = FrontierBasedSearch()
