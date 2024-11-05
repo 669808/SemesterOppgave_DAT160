@@ -4,7 +4,7 @@ from interfaces.srv import SetGoal
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
-from geometry_msgs.msg import PoseStamped
+from rclpy.task import Future
 from math import atan2, sqrt, pow
 from tf_transformations import euler_from_quaternion
 from .a_star import AStar
@@ -22,6 +22,7 @@ class GoToPointController(Node):
             f'{self.namespace}/cmd_vel', 
             10)
 
+        self.map_future = Future()
         self.subscription_odom = self.create_subscription(
             Odometry,
             f'{self.namespace}/odom',
@@ -33,13 +34,14 @@ class GoToPointController(Node):
                                 durability=QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL,
                                 depth=5,)
 
-        self.create_subscription(
+        self.map_subscription = self.create_subscription(
             OccupancyGrid, 
             '/map', 
             callback=self.clbk_map, 
             qos_profile=qos_profile)
 
         self.map_data = None
+        self.map_info = None
         self.a_star_class = None
         self.path=[]
 
@@ -70,6 +72,10 @@ class GoToPointController(Node):
         timer_period = 0.1
         self.timer = self.create_timer(timer_period, self.timer_callback) 
 
+    # We read the map from the topic and create a grid
+    # Since the occupancy grid cells has a size of 1 cm, we convert this to
+    # a grid with cells of 10 cm. This way, we save a lot of memory and
+    # computational power when running algorithms like the A*.
     def clbk_map(self, msg):
         map_width = msg.info.width
         map_height = msg.info.height
@@ -82,7 +88,11 @@ class GoToPointController(Node):
                 grid[i][j] = occupancy_grid[index]
 
         self.map_data = grid
+        self.map_info = msg.info
         self.a_star_class = AStar(map_height, map_width)
+
+        #Since we only need to read the map once, we destroy the subscription
+        self.map_subscription.destroy()
 
     def odom_callback(self, msg):
         self.current_x = msg.pose.pose.position.x
@@ -123,8 +133,11 @@ class GoToPointController(Node):
         current = (self.current_x, self.current_y)
         goal = (self.goal_x, self.goal_y)
         if self.map_data is not None:
-            self.path = self.a_star_class.a_star_search(self.map_data, current, goal)
+            self.path = self.a_star_class.a_star_search(self.map_data, current, goal, self.map_info)
             next_goal = self.path.pop(0)
+            print("The given path: ")
+            for p in self.path:
+                print(f"Point: ({p[0]}, {p[1]})")
             self.current_goal_x = next_goal[0]
             self.current_goal_y = next_goal[1]
         else:

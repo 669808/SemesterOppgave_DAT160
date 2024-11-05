@@ -26,8 +26,18 @@ class AStar:
 
     # True if there is no obstacle in the cell
     def no_obstacle(self, grid, row, column):
-        boolean = (grid[row][column] >= 0) and (grid[row][column] <= 90) 
-        return boolean
+        centre = (grid[row][column] >= 0) and (grid[row][column] <= 90) 
+
+        #TODO: If the cell has an obstacle x cells to the left, right, top, down it is occupied
+        if self.is_valid(row + 3, column + 3) and self.is_valid(row - 3, column - 3):
+            left = (grid[row][column - 3] >= 0) and (grid[row][column - 3] <= 90)
+            right = (grid[row][column + 3] >= 0) and (grid[row][column + 3] <= 90)
+            top = (grid[row - 3][column] >= 0) and (grid[row - 3][column] <= 90)
+            down = (grid[row + 3][column] >= 0) and (grid[row + 3][column] <= 90)
+
+            return centre and left and right and top and down
+        else:
+            return False
 
     # True if the cell is the goal cell
     def is_destination(self, row, column, goal):
@@ -41,19 +51,21 @@ class AStar:
         #return math.abs(row – goal[0]) + math.abs(column – goal[1])
 
     #Takes the row and column of the occupancy grid and returns a "real world" point represented by x and y.
-    def get_world_pos(self, x, y, map):
-        return (map.info.origin.position.x + y*map.info.resolution,
-                map.info.origin.position.y + x*map.info.resolution)
+    def get_world_pos(self, x, y, map_info):
+        x_pos = round(map_info.origin.position.x + y*map_info.resolution, 2)
+        y_pos = round(map_info.origin.position.y + x*map_info.resolution, 2)
+        world_pos = (x_pos, y_pos)
+        return world_pos
     
     #Takes a point and converts it into corresponding row and column in the occupancy grid
-    def get_map_coords(self, point, map):
-        x = int((point[1] - map.info.origin.position.y) / map.info.resolution)
-        y = int((point[0] - map.info.origin.position.x) / map.info.resolution)
+    def get_map_coords(self, point, map_info):
+        x = int((point[1] - map_info.origin.position.y) / map_info.resolution)
+        y = int((point[0] - map_info.origin.position.x) / map_info.resolution)
         return [x, y]
 
 
     # Trace the path from source to goal
-    def find_path(self, cell_details, goal_x, goal_y, grid):
+    def find_path(self, cell_details, goal_x, goal_y, map_info):
         path = []
         while not (cell_details[goal_x][goal_y].parent_i == goal_x and cell_details[goal_x][goal_y].parent_j == goal_y):
             path.append((goal_x, goal_y))
@@ -66,16 +78,20 @@ class AStar:
 
         world_pos_path = []
         for point in path:
-            point = self.get_world_pos(point[0], point[1], grid)
+            point = self.get_world_pos(point[0], point[1], map_info)
             world_pos_path.append(point)
         world_pos_path.reverse()
+        
+        reduced_path = world_pos_path[::10]
+        if world_pos_path[-1] not in reduced_path:
+            reduced_path.append(world_pos_path[-1])
 
-        return world_pos_path
+        return reduced_path
 
-    def a_star_search(self, grid, start, goal):
+    def a_star_search(self, grid, start, goal, map_info):
 
-        start = self.get_map_coords(start, grid)
-        goal = self.get_map_coords(goal, grid)
+        start = self.get_map_coords(start, map_info)
+        goal = self.get_map_coords(goal, map_info)
 
         if not self.is_valid(start[0], start[1]) or not self.is_valid(goal[0], goal[1]):
             print("Sourc/goal is invalid")
@@ -126,7 +142,7 @@ class AStar:
                         cell_details[new_i][new_j].parent_j = j
                         print("The goal cell is found")
                         # Trace the path back and return it
-                        path = self.find_path(cell_details, goal[0], goal[1], grid)
+                        path = self.find_path(cell_details, goal[0], goal[1], map_info)
                         found_dest = True
                         return path
                     else:
@@ -146,30 +162,4 @@ class AStar:
         if not found_dest:
             print("A* algorithm failed. Destination not found")
 
-def main():
-    grid = [
-        [1  , 100, 1  , 1  , 1  , 1  , 100, 1  , 1  , 1  ],
-        [1  , 1  , 1  , 100, 1  , 1  , 1  , 100, 1  , 1  ],
-        [1  , 1  , 1  , 100, 1  , 1  , 100, 1  , 100, 1  ],
-        [100, 100, 1  , 100, 1  , 100, 100, 100, 100, 1  ],
-        [1  , 1  , 1  , 100, 1  , 1  , 1  , 100, 1  , 100],
-        [1  , 100, 1  , 1  , 1  , 1  , 100, 1  , 100, 100],
-        [1  , 100, 100, 100, 100, 1  , 100, 100, 100, 1  ],
-        [1  , 100, 1  , 1  , 1  , 1  , 100, 1  , 1  , 1  ],
-        [1  , 1  , 1  , 100, 100, 100, 1  , 100, 100, 1  ]
-    ]
 
-    # Define the source and goal
-    start = [8, 0]
-    goal = [0, 0]
-
-    # Run the A* search algorithm
-    astar = AStar(9, 10)
-    path = astar.a_star_search(grid, start, goal)
-
-    for i in path:
-        print("->", i, end=" ")
-    print()
-
-if __name__ == "__main__":
-    main()
