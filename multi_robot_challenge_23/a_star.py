@@ -24,16 +24,17 @@ class AStar:
     def is_valid(self, row, column):
         return (row >= 0) and (row < self.row) and (column >= 0) and (column < self.column)
 
-    # True if there is no obstacle in the cell
+    # True if there is no obstacle in the cell. A cell is considered an obstacle if there is an 
+    # obstacle in the cell itself or an obstacle close to it.
     def no_obstacle(self, grid, row, column):
-        centre = (grid[row][column] >= 0) and (grid[row][column] <= 90) 
+        centre = (grid[row][column] >= 0) and (grid[row][column] <= 70) 
 
         #TODO: If the cell has an obstacle x cells to the left, right, top, down it is occupied
-        if self.is_valid(row + 3, column + 3) and self.is_valid(row - 3, column - 3):
-            left = (grid[row][column - 3] >= 0) and (grid[row][column - 3] <= 90)
-            right = (grid[row][column + 3] >= 0) and (grid[row][column + 3] <= 90)
-            top = (grid[row - 3][column] >= 0) and (grid[row - 3][column] <= 90)
-            down = (grid[row + 3][column] >= 0) and (grid[row + 3][column] <= 90)
+        if self.is_valid(row + 30, column + 30) and self.is_valid(row - 30, column - 30):
+            left = (grid[row][column - 30] >= 0) and (grid[row][column - 30] <= 70)
+            right = (grid[row][column + 30] >= 0) and (grid[row][column + 30] <= 70)
+            top = (grid[row - 30][column] >= 0) and (grid[row - 30][column] <= 70)
+            down = (grid[row + 30][column] >= 0) and (grid[row + 30][column] <= 70)
 
             return centre and left and right and top and down
         else:
@@ -82,11 +83,7 @@ class AStar:
             world_pos_path.append(point)
         world_pos_path.reverse()
         
-        reduced_path = world_pos_path[::10]
-        if world_pos_path[-1] not in reduced_path:
-            reduced_path.append(world_pos_path[-1])
-
-        return reduced_path
+        return world_pos_path
 
     def a_star_search(self, grid, start, goal, map_info):
 
@@ -94,7 +91,7 @@ class AStar:
         goal = self.get_map_coords(goal, map_info)
 
         if not self.is_valid(start[0], start[1]) or not self.is_valid(goal[0], goal[1]):
-            print("Sourc/goal is invalid")
+            print("Source/goal is invalid")
             return
 
         if not self.no_obstacle(grid, start[0], start[1]) or not self.no_obstacle(grid, goal[0], goal[1]):
@@ -129,8 +126,9 @@ class AStar:
             j = p[2]
             closedlist[i][j] = True
 
-            # Check successors for every direction
-            directions = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]
+            # Check successors for every direction. Since we dont need to check every cm
+            # we can skip some cells. The neighbors are therefore 10 cells in each direction.
+            directions = [(0, 10), (0, -10), (10, 0), (-10, 0), (10, 10), (10, -10), (-10, 10), (-10, -10)]
             for dir in directions:
                 new_i = i + dir[0]
                 new_j = j + dir[1]

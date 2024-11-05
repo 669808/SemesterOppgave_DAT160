@@ -168,7 +168,7 @@ class GoToPointController(Node):
             if (abs(self.normalize_angle(desired_yaw)-self.normalize_angle(self.yaw)) > self.yaw_tolerance):
                 self.go_to_goal(desired_yaw, 0.0)
             else:
-                self.go_to_goal(desired_yaw, min(0.3*distance_to_goal, 0.3))
+                self.go_to_goal(desired_yaw, min(0.3*distance_to_goal, 0.4))
 
 def main(args=None):
     rclpy.init(args=args)

@@ -128,7 +128,7 @@ class CentralController(Node):
 
     def timer_callback(self):
         if not self.requestsent:
-            self.send_gotopoint_request(True, 1.0, -1.0)
+            self.send_gotopoint_request(True, -3.0, -2.0)
             self.requestsent = True
             print('Request sent')
 
