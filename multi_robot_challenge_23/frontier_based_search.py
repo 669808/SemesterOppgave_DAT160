@@ -3,6 +3,7 @@ from rclpy import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy, QoSDurabilityPolicy
 from nav_msgs.msg import OccupancyGrid
 from interfaces.srv import FrontierRequest
+from collections import deque
 
 
 class FrontierBasedSearch(Node):
@@ -28,11 +29,23 @@ class FrontierBasedSearch(Node):
 
         self.srv = self.create_service(FrontierRequest, 'frontier_based_search', self.handle_service)
 
+    #Updated the create_frontier map
     def create_frontier_map(self):
-        if not self.map_adjusted:
-            x = 1
-            # TODO: Take the map read from the '/map'-topic and convert it to a frontier map.
-            # We have to convert all cells that have no obstacles to take the value -1, so we have a unexplore map.
+        if self.map_data is None:
+            return
+
+        #Iterate over the map data to create a frontier map
+        frontier_map = []
+        for i in range(len(self.map_data)):
+            for j in range(len(self.map_data[i])):
+                if self.map_data[i][j] == -1:  # If the cell is unexplored
+                    #Check if it borders a known space (value >= 0)
+                    if any(self.map_data[ni][nj] >= 0 for ni, nj in self.get_neighbors(i, j)):
+                        frontier_map.append((i, j))
+
+        self.frontier_list = frontier_map
+        self.map_adjusted = True
+
     
     def clbk_map(self, msg):
         map_width = msg.info.width
@@ -47,6 +60,17 @@ class FrontierBasedSearch(Node):
 
         self.map_data = grid
 
+    #defined a get_neighbour function
+    def get_neighbours(self, x, y):
+        neighbors = [
+         (x - 1, y), (x + 1, y), 
+            (x, y - 1), (x, y + 1)
+     ]
+        #Filter out neighbors that are out of bounds
+        return [(nx, ny) for nx, ny in neighbors if 0 <= nx < len(self.map_data) and 0 <= ny < len(self.map_data[0])]
+
+
+
     def handle_service(self, request, response):
         # TODO: Each time a request is sent, this service should recieve sensor data to update the map in addition to
         # the position of the robot. The map is updated and a new frontier is returned
@@ -55,15 +79,56 @@ class FrontierBasedSearch(Node):
             response.frontier = self.find_nearest_frontier(request.robot_pos)
         return response
 
-    # Method to find the nearest frontier of a robot
+    #Method to find the nearest frontier of a robot
     def find_nearest_frontier(self, robot_pos):
         return 
     
     def update_frontier_map(self, data, robot_current_pos):
         success = True
-        # TODO: Take the data from the robot and update the frontier map. The existing frontier that was reached
-        # needs to be removed and the new frontiers need to be calculated.
+
+        #Update map data with the latest sensor data
+        #TODO add logic to process 'data' and integrate it into self.map_data)
+        for sensor_reading in data:
+            
+            x_offset, y_offset, occupancy_value = sensor_reading
+
+            #Calculate absolute map position based on the robot's current position
+            map_x = robot_current_pos[0] + x_offset
+            map_y = robot_current_pos[1] + y_offset
+
+            #Ensure the calculated position is within the map bounds
+            if 0 <= map_x < len(self.map_data) and 0 <= map_y < len(self.map_data[0]):
+                self.map_data[map_x][map_y] = occupancy_value
+
+        #Remove the reached frontier
+        self.frontier_list = [f for f in self.frontier_list if f != robot_current_pos]
+
+        #recalculate frontiers
+        self.create_frontier_map()
+
         return success
+
+
+    def find_nearest_frontier(self, robot_pos):
+        if not self.frontier_list:
+            return None
+
+        #Use a BFS approach to find the nearest frontier
+        queue = deque([robot_pos])
+        visited = set()
+        visited.add(robot_pos)
+
+        while queue:
+            current_pos = queue.popleft()
+            if current_pos in self.frontier_list:
+                return current_pos
+
+            for neighbor in self.get_neighbors(*current_pos):
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    queue.append(neighbor)
+
+        return None
 
     
 def main(args=None):
