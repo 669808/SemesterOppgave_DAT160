@@ -2,9 +2,14 @@ import rclpy
 from rclpy import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy, QoSDurabilityPolicy
 from nav_msgs.msg import OccupancyGrid
+#I do not have this file in my directory, therefore there's an error
 from interfaces.srv import FrontierRequest
 from collections import deque
+#Import LIDAR
+from sensor_msgs.msg import LaserScan
+import math
 
+#Implemented LIDAR. Map gets updated in real time, takes a lot of computional power. Functions on my machine.
 
 class FrontierBasedSearch(Node):
     def __init__(self):
@@ -21,6 +26,14 @@ class FrontierBasedSearch(Node):
             callback=self.clbk_map, 
             qos_profile=qos_profile)
         
+        #Lidar scan, as the robots are provided with 1 LIDAR
+        self.create_subscription(
+            LaserScan,
+            '/scan',
+            self.lidar_callback,
+            QoSProfile(depth=10)  #Adjust depth as needed
+        )
+        
         self.map_data = None
         self.map = None
         self.map_adjusted = False
@@ -29,6 +42,7 @@ class FrontierBasedSearch(Node):
         self.frontier_list = []
 
         self.srv = self.create_service(FrontierRequest, 'frontier_based_search', self.handle_service)
+
 
     #Updated the create_frontier map
     def create_frontier_map(self):
@@ -95,12 +109,12 @@ class FrontierBasedSearch(Node):
         
 
     def update_frontier_map(self, data, robot_current_pos):
-        success = True
+        if self.map_data is None:
+            self.get_logger().warn("Map data is not initialized.")
+            return False
 
-        #Update map data with the latest sensor data
-        #TODO add logic to process 'data' and integrate it into self.map_data)
+        #Process and integrate sensor data into the map
         for sensor_reading in data:
-            
             x_offset, y_offset, occupancy_value = sensor_reading
 
             #Calculate absolute map position based on the robot's current position
@@ -114,10 +128,10 @@ class FrontierBasedSearch(Node):
         #Remove the reached frontier
         self.frontier_list = [f for f in self.frontier_list if f != robot_current_pos]
 
-        #recalculate frontiers
+        #Recalculate frontiers
         self.create_frontier_map()
 
-        return success
+        return True
 
 
     def find_nearest_frontier(self, robot_pos):
@@ -140,6 +154,31 @@ class FrontierBasedSearch(Node):
                     queue.append(neighbor)
 
         return None
+    
+    #LIDAR callback function for processing scan data
+    def lidar_callback(self, msg: LaserScan):
+        angle_min = msg.angle_min
+        angle_max = msg.angle_max
+        angle_increment = msg.angle_increment
+        ranges = msg.ranges
+        robot_x, robot_y = self.get_robot_position()
+
+        for i, distance in enumerate(ranges):
+            if distance < msg.range_max:
+                angle = angle_min + i * angle_increment
+                obstacle_x = int(robot_x + distance * math.cos(angle))
+                obstacle_y = int(robot_y + distance * math.sin(angle))
+
+                #Update free space (mark cells as free up to the obstacle)
+                for d in range(int(distance)):
+                    free_x = int(robot_x + d * math.cos(angle))
+                    free_y = int(robot_y + d * math.sin(angle))
+                    if 0 <= free_x < len(self.map_data) and 0 <= free_y < len(self.map_data[0]):
+                        self.map_data[free_x][free_y] = 0  #Mark as free
+
+                 #Mark the obstacle
+                if 0 <= obstacle_x < len(self.map_data) and 0 <= obstacle_y < len(self.map_data[0]):
+                    self.map_data[obstacle_x][obstacle_y] = 100  #Mark as an obstacle
 
     
 def main(args=None):
