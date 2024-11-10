@@ -151,16 +151,16 @@ def generate_launch_description():
 
     #Legge til frontier search node i launch filen
 # frontier_search_node = Node(
-#     package='multi_robot_challenge_23',  # Replace with your package name
-#     executable='frontier_based_search',  # Replace with the executable name of your Python file
+#     package='multi_robot_challenge_23',  
+#     executable='frontier_based_search',  
 #     name='frontier_based_search',
-#     output='screen',  # Log output to the terminal
+#     output='screen',  
 #     parameters=[
 #         {'use_sim_time': LaunchConfiguration('use_sim_time')}
 #     ],
 #     remappings=[
-#         ('/map', '/map'),  # Ensure topics are correctly mapped
-#         ('/cmd_vel', '/tb3_0/cmd_vel'),  # Map to robot's namespace if needed
+#         ('/map', '/map'),  
+#         ('/cmd_vel', '/tb3_0/cmd_vel'),  
 #     ]
 # )
 
