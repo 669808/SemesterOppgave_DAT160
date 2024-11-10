@@ -147,6 +147,24 @@ def generate_launch_description():
     #                     {"namespace": first_tb3}]
     #     )
 
+    # Add this Node for the frontier-based search
+
+    #Legge til frontier search node i launch filen
+# frontier_search_node = Node(
+#     package='multi_robot_challenge_23',  # Replace with your package name
+#     executable='frontier_based_search',  # Replace with the executable name of your Python file
+#     name='frontier_based_search',
+#     output='screen',  # Log output to the terminal
+#     parameters=[
+#         {'use_sim_time': LaunchConfiguration('use_sim_time')}
+#     ],
+#     remappings=[
+#         ('/map', '/map'),  # Ensure topics are correctly mapped
+#         ('/cmd_vel', '/tb3_0/cmd_vel'),  # Map to robot's namespace if needed
+#     ]
+# )
+
+
     return LaunchDescription([
         sim_time_arg,
         gazebo,
@@ -159,5 +177,6 @@ def generate_launch_description():
         # init_pose_tb3_0,
         #go_to_point_server_tb3_0,
         #go_to_point_server_tb3_1,
+        #frontier_search_node,
         rviz_node,
     ])
