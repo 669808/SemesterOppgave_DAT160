@@ -1,7 +1,5 @@
 # Multi Robot Challenge 2023
 
-Welcome to the Multi Robot Challenge 2023 repository. This project is designed to facilitate the development and testing of multi-robot systems using ROS 2.
-
 ## Table of Contents
 - [Introduction](#introduction)
 - [Installation](#installation)
@@ -9,7 +7,7 @@ Welcome to the Multi Robot Challenge 2023 repository. This project is designed t
 - [License](#license)
 
 ## Introduction
-This project aims to provide a framework for simulating and controlling multiple robots in a shared environment. It includes various tools and libraries to help you get started with multi-robot systems.
+This project is the semester project of group 30 in the DAT160 course.
 
 ## Installation
 1. Clone the repository:
@@ -23,7 +21,11 @@ This project aims to provide a framework for simulating and controlling multiple
 ## Usage
 To launch the simulation, use the following command:
 ```sh
-ros2 launch multi_robot_challenge_23 simulation.launch.py
+ros2 launch multi_robot_challenge_23 rescue_robot
+```
+After the simualtion has launched and has had some time to initalize the services, run the main script:
+```sh
+ros2 run multi_robot_challenge_23 central_controller
 ```
 
 
