@@ -2,7 +2,8 @@
 import rclpy
 from rclpy.node import Node
 
-from sensor_msgs.msg import LaserScan
+from std_msgs.msg import Int64
+from geometry_msgs.msg import Pose
 from interfaces.srv import SetGoal
 from interfaces.srv import FrontierRequest
 
@@ -21,8 +22,8 @@ class CentralController(Node):
             'tb3_1_go_to_point_service',
         )
 
-        while not self.client_tb3_0.wait_for_service(timeout_sec=2.0):
-            print("Waiting for service: tb3_0")
+        # while not self.client_tb3_0.wait_for_service(timeout_sec=2.0):
+        #     print("Waiting for service: tb3_0")
         # while not self.client_tb3_1.wait_for_service(timeout_sec=2.0):
         #     print("Waiting for service: tb3_1")
         
@@ -31,81 +32,35 @@ class CentralController(Node):
             'frontier_based_search' 
         )
 
-        self.subscription_lidar_tb3_0 = self.create_subscription(
-            LaserScan,
-            'tb3_0/scan',
-            self.lidar_callback_tb3_0,
-            10)
-        
-        self.subscription_lidar_tb3_1 = self.create_subscription(
-            LaserScan,
-            'tb3_1/scan',
-            self.lidar_callback_tb3_1,
-            10)
+        while not self.client_frontier_based_search.wait_for_service(timeout_sec=2.0):
+            print("Waiting for service: frontier_based_search")
 
-        self.sensors_tb3_0 = {
-            "front": 0,
-            "left": 0,
-            "right": 0,
-            "rear": 0,
-            "front_left": 0,
-            "front_right": 0,
-            "rear_left": 0,
-            "rear_right": 0
-        }
-
-        self.sensors_tb3_1 = {
-            "front": 0,
-            "left": 0,
-            "right": 0,
-            "rear": 0,
-            "front_left": 0,
-            "front_right": 0,
-            "rear_left": 0,
-            "rear_right": 0
-        }
+        # self.subscription_marker_pose_tb3_0 = self.create_subscription(Pose,'tb3_0//marker_map_pose',self.marker_callback_tb3_0,10)
+        # self.subscription_marker_pose_tb3_1 = self.create_subscription(Pose,'tb3_1//marker_map_pose',self.marker_callback_tb3_1,10)
+        # self.subscription_marker_id_tb3_0 = self.create_subscription(Int64,'tb3_0/marker_id',self.marker_id_callback_tb3_0,10)
+        # self.subscription_marker_id_tb3_1 = self.create_subscription(Int64,'tb3_1/marker_id',self.marker_id_callback_tb3_1,10)
+        #self. scoring = self.create_client(SetMarkerPosition, 'scoring')
 
         self.requestsent = False
-        print('Hey')
         self.timer = self.create_timer(0.1, self.timer_callback)
 
-    def lidar_callback_tb3_0(self, msg):
-        self.sensors_tb3_0 = {
-            "front": min(msg.ranges[0:1]),
-            "left": min(msg.ranges[90:91]),
-            "right": min(msg.ranges[270:271]),
-            "rear": min(msg.ranges[180:181]),
-            "front_left": min(msg.ranges[45:46]),
-            "front_right": min(msg.ranges[315:316]),
-            "rear_left": min(msg.ranges[135:136]),
-            "rear_right": min(msg.ranges[225:226])
-        }
-
-    def lidar_callback_tb3_1(self, msg):
-        self.sensors_tb3_1 = {
-            "front": min(msg.ranges[0:1]),
-            "left": min(msg.ranges[90:91]),
-            "right": min(msg.ranges[270:271]),
-            "rear": min(msg.ranges[180:181]),
-            "front_left": min(msg.ranges[45:46]),
-            "front_right": min(msg.ranges[315:316]),
-            "rear_left": min(msg.ranges[135:136]),
-            "rear_right": min(msg.ranges[225:226])
-        }
-
-    def send_frontier_request(self, lidarsensor_data, x_coord, y_coord):
+    def send_frontier_request(self, x_coord, y_coord):
         request = FrontierRequest.Request()
-        request.data = lidarsensor_data
         request.current_pos.x = x_coord
         request.current_pos.y = y_coord
 
-        future = self.client_tb3_0.call_async(request)
+        future = self.client_frontier_based_search.call_async(request)
+        print('Request sent')
+
         future.add_done_callback(self.handle_frontier_response)
 
     def handle_frontier_response(self, future):
         try:
             response = future.result()
+            frontier = response.frontier
             self.get_logger().info(f'Service response: {response.success}')
+            print(f'Frontier: {frontier}')
+
         except Exception as e:
             self.get_logger().error(f'Error: {e}')
 
@@ -118,19 +73,20 @@ class CentralController(Node):
         future = self.client_tb3_0.call_async(request)
         future.add_done_callback(self.handle_gotopoint_response)
 
-    def handle_gotopoint_response(self, future):
+    def handle_gotopoint_response(self, future): 
         try:
             response = future.result()
-            #self.arrived_at_goal = response
-            self.get_logger().info(f'Service response: {response.message}')
+            self.get_logger().info(f'Service response: {response.success}')
         except Exception as e:
             self.get_logger().error(f'Error: {e}')
 
     def timer_callback(self):
         if not self.requestsent:
-            self.send_gotopoint_request(True, -3.0, -2.0)
+            #self.send_gotopoint_request(True, 3.05, 3.2)
+
+            self.send_frontier_request(0.0, -1.0)
             self.requestsent = True
-            print('Request sent')
+
 
 
 def main(args=None):

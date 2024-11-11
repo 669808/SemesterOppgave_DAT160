@@ -85,6 +85,12 @@ def generate_launch_description():
         }.items()
     )
 
+    # scoring = Node(
+    #     package='scoring',
+    #     executable='scoring',
+    #     name='scoring'
+    # )
+
     #Starting the services for each turtlebot
     # go_to_point_server_tb3_0 = Node(
     #     package='multi_robot_challenge_23',
@@ -109,44 +115,6 @@ def generate_launch_description():
         output='screen'
     )
 
-    # nav2_launch_file = os.path.join(get_package_share_directory('nav2_bringup'), 'launch', 'navigation_launch.py')
-    # nav2_bringup = IncludeLaunchDescription(
-    #         PythonLaunchDescriptionSource(nav2_launch_file),
-    #         launch_arguments={
-    #                 'autostart': 'False',
-    #                 'use_sim_time': use_sim_time,
-    #                 #'params_file': params_file_path,  ???????
-    #                 'map': map_file_path,
-    #                 'namespace': first_tb3
-    #             }.items()
-    #     )
-
-    # nav2_launch_file = os.path.join(get_package_share_directory('nav2_bringup'), 'launch', 'navigation_launch.py')
-    # nav2_bringup = Node(
-    #         package='nav2_bringup',
-    #         executable='bringup',
-    #         parameters=[
-    #             {'use_sim_time': use_sim_time},
-    #             {'map': map_file_path}
-    #         ]
-    #     )
-    # nav2_launch = IncludeLaunchDescription(
-    #         PythonLaunchDescriptionSource(nav2_launch_file),
-    #         launch_arguments={
-    #             'autostart': 'False',
-    #             #'use_lifecycle_manager': ,
-    #             'use_sim_time': 'False',
-    #         }
-    #     )
-    # init_pose_tb3_0 = Node(
-    #         package='multi_robot_challenge_23',
-    #         executable='initial_pose_publisher', 
-    #         output='screen',
-    #         name='initial_pose_publisher',
-    #         parameters=[{'initial_pos': first_tb3_pos},
-    #                     {"namespace": first_tb3}]
-    #     )
-
     return LaunchDescription([
         sim_time_arg,
         gazebo,
@@ -154,10 +122,11 @@ def generate_launch_description():
         lifecycle_manager,
         tb3_0,
         tb3_1,
+        # scoring,
         # nav2_bringup,
         # nav2_launch,
         # init_pose_tb3_0,
-        #go_to_point_server_tb3_0,
+        # go_to_point_server_tb3_0,
         #go_to_point_server_tb3_1,
         rviz_node,
     ])

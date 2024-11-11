@@ -61,8 +61,6 @@ class GoToPointController(Node):
         # When centering on the target, the angle does not have to be 'perfect'
         self.goal_tolerance = 0.1
         self.yaw_tolerance = 0.2
-        
-        self.arrived_at_goal = False
 
         #Server switch and initialization
         self.go_to_goal_switch = False
@@ -73,9 +71,6 @@ class GoToPointController(Node):
         self.timer = self.create_timer(timer_period, self.timer_callback) 
 
     # We read the map from the topic and create a grid
-    # Since the occupancy grid cells has a size of 1 cm, we convert this to
-    # a grid with cells of 10 cm. This way, we save a lot of memory and
-    # computational power when running algorithms like the A*.
     def clbk_map(self, msg):
         map_width = msg.info.width
         map_height = msg.info.height
@@ -89,7 +84,7 @@ class GoToPointController(Node):
 
         self.map_data = grid
         self.map_info = msg.info
-        self.a_star_class = AStar(map_height, map_width)
+        self.a_star_class = AStar(map_height, map_width, grid, msg.info)
 
         #Since we only need to read the map once, we destroy the subscription
         self.map_subscription.destroy()
@@ -122,28 +117,28 @@ class GoToPointController(Node):
         twist.linear.x = 0.0
         twist.angular.z = 0.0
         self.cmd_vel_publisher.publish(twist)
-        self.arrived_at_goal = True
+        self.go_to_goal_switch = False
 
     def handle_service(self, request, response):
+        self.get_logger().info('Request recieved')
         success = True
         self.go_to_goal_switch = request.move_switch
-        self.arrived_at_goal = False
         self.goal_x = request.target_position.x
         self.goal_y = request.target_position.y
         current = (self.current_x, self.current_y)
         goal = (self.goal_x, self.goal_y)
         if self.map_data is not None:
-            self.path = self.a_star_class.a_star_search(self.map_data, current, goal, self.map_info)
+            self.path = self.a_star_class.a_star_search(current, goal)
             next_goal = self.path.pop(0)
-            print("The given path: ")
+            self.get_logger().info("The given path: ")
             for p in self.path:
-                print(f"Point: ({p[0]}, {p[1]})")
+                self.get_logger().info(f"Point: ({p[0]}, {p[1]})")
             self.current_goal_x = next_goal[0]
             self.current_goal_y = next_goal[1]
         else:
             success = False
         response.success = success
-        print(f'Go-to-point switch has been set to {self.go_to_goal_switch}')
+        self.get_logger().info(f'Go-to-point switch has been set to {self.go_to_goal_switch}')
         return response
 
     def timer_callback(self):
@@ -168,15 +163,17 @@ class GoToPointController(Node):
             if (abs(self.normalize_angle(desired_yaw)-self.normalize_angle(self.yaw)) > self.yaw_tolerance):
                 self.go_to_goal(desired_yaw, 0.0)
             else:
-                self.go_to_goal(desired_yaw, min(0.3*distance_to_goal, 0.4))
+                self.go_to_goal(desired_yaw, 0.3)
 
 def main(args=None):
     rclpy.init(args=args)
+
     controller = GoToPointController()
     
     rclpy.spin(controller)
 
     controller.destroy_node()
+
     rclpy.shutdown()
 
 if __name__ == '__main__':
