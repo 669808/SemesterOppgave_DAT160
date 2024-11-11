@@ -32,7 +32,7 @@ setup(
             'leader = multi_robot_challenge_23.leader:main',
             'go_to_point_a_star = multi_robot_challenge_23.go_to_point_a_star:main',
             'central_controller = multi_robot_challenge_23.central_controller:main',
-            'frontier_based_search = multi_robot_challenge_23.frontier_based_search:main',
+            'frontier_based_search = multi_robot_challenge_23.frontier_based_search',
         ],
     },
 )
