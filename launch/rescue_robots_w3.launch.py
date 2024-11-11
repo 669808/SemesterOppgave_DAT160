@@ -93,6 +93,22 @@ def generate_launch_description():
         output='screen'
     )
 
+    go_to_point_server_tb3_0 = Node(
+        package='multi_robot_challenge_23',
+        executable='go_to_point_a_star',
+        name='tb3_0_go_to_point_service',
+        parameters=[{'use_sim_time': use_sim_time},
+                    {'namespace': first_tb3}]
+    )
+
+    go_to_point_server_tb3_1 = Node(
+        package='multi_robot_challenge_23',
+        executable='go_to_point_a_star',
+        name='tb3_1_go_to_point_service',
+        parameters=[{'use_sim_time': use_sim_time},
+                    {'namespace': second_tb3}]
+    )
+
     return LaunchDescription([
         sim_time_arg,
         gazebo,
@@ -101,4 +117,6 @@ def generate_launch_description():
         tb3_0,
         tb3_1,
         rviz_node,
+        go_to_point_server_tb3_0,
+        go_to_point_server_tb3_1
     ])

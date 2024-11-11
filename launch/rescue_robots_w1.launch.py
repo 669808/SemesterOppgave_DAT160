@@ -91,20 +91,6 @@ def generate_launch_description():
     #     name='scoring'
     # )
 
-    #Starting the services for each turtlebot
-    # go_to_point_server_tb3_0 = Node(
-    #     package='multi_robot_challenge_23',
-    #     executable='go_to_point_a_star',
-    #     name='tb3_0_go_to_point_service',
-    #     namespace=first_tb3
-    # )
-    # go_to_point_server_tb3_1 = Node(
-    #     package='multi_robot_challenge_23',
-    #     executable='go_to_point_a_star',
-    #     name='tb3_1_go_to_point_service',
-    #     namespace=second_tb3
-    # )
-    
     # Starting rviz
     rviz_node = Node(
         package='rviz2',
@@ -115,43 +101,21 @@ def generate_launch_description():
         output='screen'
     )
 
-    # nav2_launch_file = os.path.join(get_package_share_directory('nav2_bringup'), 'launch', 'navigation_launch.py')
-    # nav2_bringup = IncludeLaunchDescription(
-    #         PythonLaunchDescriptionSource(nav2_launch_file),
-    #         launch_arguments={
-    #                 'autostart': 'False',
-    #                 'use_sim_time': use_sim_time,
-    #                 #'params_file': params_file_path,  ???????
-    #                 'map': map_file_path,
-    #                 'namespace': first_tb3
-    #             }.items()
-    #     )
+    go_to_point_server_tb3_0 = Node(
+        package='multi_robot_challenge_23',
+        executable='go_to_point_a_star',
+        name='tb3_0_go_to_point_service',
+        parameters=[{'use_sim_time': use_sim_time},
+                    {'namespace': first_tb3}]
+    )
 
-    # nav2_launch_file = os.path.join(get_package_share_directory('nav2_bringup'), 'launch', 'navigation_launch.py')
-    # nav2_bringup = Node(
-    #         package='nav2_bringup',
-    #         executable='bringup',
-    #         parameters=[
-    #             {'use_sim_time': use_sim_time},
-    #             {'map': map_file_path}
-    #         ]
-    #     )
-    # nav2_launch = IncludeLaunchDescription(
-    #         PythonLaunchDescriptionSource(nav2_launch_file),
-    #         launch_arguments={
-    #             'autostart': 'False',
-    #             #'use_lifecycle_manager': ,
-    #             'use_sim_time': 'False',
-    #         }
-    #     )
-    # init_pose_tb3_0 = Node(
-    #         package='multi_robot_challenge_23',
-    #         executable='initial_pose_publisher', 
-    #         output='screen',
-    #         name='initial_pose_publisher',
-    #         parameters=[{'initial_pos': first_tb3_pos},
-    #                     {"namespace": first_tb3}]
-    #     )
+    go_to_point_server_tb3_1 = Node(
+        package='multi_robot_challenge_23',
+        executable='go_to_point_a_star',
+        name='tb3_1_go_to_point_service',
+        parameters=[{'use_sim_time': use_sim_time},
+                    {'namespace': second_tb3}]
+    )
 
     # Add this Node for the frontier-based search
 
@@ -178,12 +142,9 @@ def generate_launch_description():
         lifecycle_manager,
         tb3_0,
         tb3_1,
-        # scoring,
-        # nav2_bringup,
-        # nav2_launch,
-        # init_pose_tb3_0,
-        # go_to_point_server_tb3_0,
-        #go_to_point_server_tb3_1,
-        #frontier_search_node,
         rviz_node,
+        # scoring,
+        go_to_point_server_tb3_0,
+        go_to_point_server_tb3_1,
+        #frontier_search_node,
     ])

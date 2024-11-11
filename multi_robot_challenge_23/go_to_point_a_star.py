@@ -1,3 +1,4 @@
+import time
 import rclpy
 import math
 from interfaces.srv import SetGoal
@@ -15,12 +16,19 @@ class GoToPointController(Node):
 
     def __init__(self):
         super().__init__('go_to_point')
-        self.declare_parameter('namespace')
+
+        # Wait for the map to be read
+        time.sleep(20)
+
+        self.declare_parameter('namespace', '')
         self.namespace = self.get_parameter('namespace').get_parameter_value().string_value        
+        self.get_logger().info(f'Namespace: {self.namespace}')
+        
         self.cmd_vel_publisher = self.create_publisher(
             Twist, 
             f'{self.namespace}/cmd_vel', 
             10)
+        self.get_logger().info(f'Publisher created for {self.namespace}/cmd_vel')
 
         self.map_future = Future()
         self.subscription_odom = self.create_subscription(
@@ -28,6 +36,7 @@ class GoToPointController(Node):
             f'{self.namespace}/odom',
             self.odom_callback,
             10)
+        self.get_logger().info(f'Subscription created for {self.namespace}/odom')
         
         qos_profile = QoSProfile(reliability=QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_RELIABLE,
                                 history=QoSHistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_LAST,
@@ -39,6 +48,7 @@ class GoToPointController(Node):
             '/map', 
             callback=self.clbk_map, 
             qos_profile=qos_profile)
+        self.get_logger().info('Subscription created for /map')
 
         self.map_data = None
         self.map_info = None
@@ -64,11 +74,13 @@ class GoToPointController(Node):
 
         #Server switch and initialization
         self.go_to_goal_switch = False
-        self.srv = self.create_service(SetGoal, f'{self.namespace}_go_to_point_service', self.handle_service)
+        self.srv = self.create_service(SetGoal, f'{self.namespace}/go_to_point_service', self.handle_service)
+        self.get_logger().info(f'Service created for {self.namespace}/go_to_point_service')
         print("Service is running for: ", self.namespace)
 
         timer_period = 0.1
         self.timer = self.create_timer(timer_period, self.timer_callback) 
+        self.get_logger().info('Timer created')
 
     # We read the map from the topic and create a grid
     def clbk_map(self, msg):
@@ -120,11 +132,12 @@ class GoToPointController(Node):
         self.go_to_goal_switch = False
 
     def handle_service(self, request, response):
-        self.get_logger().info('Request recieved')
+        self.get_logger().info('Request received')
         success = True
         self.go_to_goal_switch = request.move_switch
         self.goal_x = request.target_position.x
         self.goal_y = request.target_position.y
+        self.get_logger().info(f'Received goal: ({self.goal_x}, {self.goal_y})')
         current = (self.current_x, self.current_y)
         goal = (self.goal_x, self.goal_y)
         if self.map_data is not None:
@@ -136,6 +149,7 @@ class GoToPointController(Node):
             self.current_goal_x = next_goal[0]
             self.current_goal_y = next_goal[1]
         else:
+            self.get_logger().error('Map data is None')
             success = False
         response.success = success
         self.get_logger().info(f'Go-to-point switch has been set to {self.go_to_goal_switch}')
