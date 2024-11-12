@@ -28,10 +28,10 @@ class CentralController(Node):
         while not self.client_tb3_1.wait_for_service(timeout_sec=2.0):
             print("Waiting for service: tb3_1")
         
-        # self.client_frontier_based_search = self.create_client(
-        #     FrontierRequest,
-        #     'frontier_based_search' 
-        # )
+        self.client_frontier_based_search = self.create_client(
+            FrontierRequest,
+            'frontier_based_search' 
+        )
 
         # while not self.client_frontier_based_search.wait_for_service(timeout_sec=2.0):
         #     print("Waiting for service: frontier_based_search")
