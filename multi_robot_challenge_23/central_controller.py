@@ -89,6 +89,7 @@ class CentralController(Node):
         if not self.requestsent:
             self.send_gotopoint_request(True, 3.0, -3.0, 'tb3_0')
             self.send_gotopoint_request(True, 3.05, 3.2, 'tb3_1')
+            self.send_frontier_request(0.0, -1.0)
             self.requestsent = True
 
 
