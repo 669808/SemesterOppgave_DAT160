@@ -21,7 +21,7 @@ This project is the semester project of group 30 in the DAT160 course.
 ## Usage
 To launch the simulation, use the following command:
 ```sh
-ros2 launch multi_robot_challenge_23 rescue_robot_w1.launch.py
+ros2 launch multi_robot_challenge_23 rescue_robots_w1.launch.py
 ```
 After the simualtion has launched and has had some time to initalize the services, run the main script:
 ```sh
