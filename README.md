@@ -32,9 +32,9 @@ ros2 run multi_robot_challenge_23 central_controller
 
 Go to the directory:
 
-'''sh
+```sh
 cd ~/ros2_ws
-'''
+```
 
 Paste the following lines (in order) in a terminal with the correct directory.
 ```sh
