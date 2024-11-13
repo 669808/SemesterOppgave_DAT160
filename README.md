@@ -37,15 +37,15 @@ cd ~/ros2_ws
 '''
 
 Paste the following lines (in order) in a terminal with the correct directory.
-'''sh
+```sh
 ros2 launch multi_robot_challenge_23 rescue_robots_w1.launch.py
-'''
-'''sh
+```
+```sh
 ros2 run multi_robot_challenge_23 central_controller
-'''
-'''sh
+```
+```sh
 ros2 run scoring scoring
-'''
+```
 
 
 ## License
