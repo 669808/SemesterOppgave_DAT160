@@ -90,7 +90,7 @@ def generate_launch_description():
          package='scoring',
          executable='scoring',
          name='scoring'
-     )
+    )
 
     # Include the ArUco recognition launch file
     aruco_recognition = IncludeLaunchDescription(
@@ -127,19 +127,19 @@ def generate_launch_description():
     # Add this Node for the frontier-based search
 
     #Legge til frontier search node i launch filen
-# frontier_search_node = Node(
-#     package='multi_robot_challenge_23',  
-#     executable='frontier_based_search',  
-#     name='frontier_based_search',
-#     output='screen',  
-#     parameters=[
-#         {'use_sim_time': LaunchConfiguration('use_sim_time')}
-#     ],
-#     remappings=[
-#         ('/map', '/map'),  
-#         ('/cmd_vel', '/tb3_0/cmd_vel'),  
-#     ]
-# )
+    frontier_search_node = Node(
+        package='multi_robot_challenge_23',  
+        executable='frontier_based_search',  
+        name='frontier_based_search',
+        output='screen',  
+        parameters=[
+             {'use_sim_time': LaunchConfiguration('use_sim_time')}
+        ],
+        remappings=[
+            ('/map', '/map'),  
+            ('/cmd_vel', '/tb3_0/cmd_vel'),  
+        ]
+    )
 
 
     return LaunchDescription([
@@ -154,5 +154,5 @@ def generate_launch_description():
         aruco_recognition,  
         go_to_point_server_tb3_0,
         go_to_point_server_tb3_1,
-        #frontier_search_node,
+        frontier_search_node,
     ])
