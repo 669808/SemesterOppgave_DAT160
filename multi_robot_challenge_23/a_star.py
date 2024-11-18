@@ -80,9 +80,10 @@ class AStar:
         path.append((goal_x, goal_y))
 
         world_pos_path = []
-        for point in path:
-            point = self.get_world_pos(point[0], point[1])
-            world_pos_path.append(point)
+        for i, point in enumerate(path):
+            if i % 5 == 0 or i == len(path) - 1:
+                point = self.get_world_pos(point[0], point[1])
+                world_pos_path.append(point)
         world_pos_path.reverse()
         
         return world_pos_path

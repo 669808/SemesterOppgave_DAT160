@@ -204,11 +204,11 @@ class FrontierBasedSearch(Node):
             for nx, ny in self.get_neighbors(x, y):
                 if (nx, ny) not in visited:
                     visited.add((nx, ny))
-                    if self.map_data[nx, ny] <= 50:  # Continue BFS within the circle
+                    if self.map_data[nx, ny] == 0:  # Continue BFS within the circle
                         queue.append((nx, ny))
                     elif self.map_data[nx, ny] == -1:  # Potential border cell
                         # Check if any neighbor is within the circle (value 0)
-                        if any(self.map_data[bx, by] <= 50 for bx, by in self.get_neighbors(nx, ny)):
+                        if any(self.map_data[bx, by] == 0 for bx, by in self.get_neighbors(nx, ny)):
                             frontier_cells.append((nx, ny))
         
         return frontier_cells
@@ -293,24 +293,25 @@ class FrontierBasedSearch(Node):
         for angle, distance in zip(angles, ranges):
             if distance < msg.range_min or distance > msg.range_max:
                 distance = msg.range_max
-            # Convert polar coordinates (angle, distance) to cartesian (x, y)
+
             x = distance * math.cos(angle) * 100
             y = distance * math.sin(angle) * 100
 
-            # Convert the position to grid coordinates
             grid_x = int(robot_x + x)
             grid_y = int(robot_y + y)
 
             if 0 <= grid_x < self.map_info.width and 0 <= grid_y < self.map_info.height:
-                # Set the cell as occupied
+                
                 if self.map_data[grid_x, grid_y] == -1:
                     self.map_data[grid_x, grid_y] = 0
 
-                # Fill cells between the robot and the occupied cell with 0 (open space)
                 self.fill_open_cells(robot_x, robot_y, grid_x, grid_y)
 
+    # Bresenham's line algorithm 
+    # The method draws a line between two points and fills 
+    # all cells that are on the line. In addition, it fills the cells' neighbors to
+    # fill gaps in the sensor readings.
     def fill_open_cells(self, x0, y0, x1, y1):
-        # Bresenham's line algorithm to draw a line between two points
         dx = abs(x1 - x0)
         dy = abs(y1 - y0)
         sx = 1 if x0 < x1 else -1
@@ -319,9 +320,9 @@ class FrontierBasedSearch(Node):
 
         while x0 != x1 or y0 != y1:
             if 0 <= x0 < self.map_info.width and 0 <= y0 < self.map_info.height:
-                if self.map_data[x0, y0] == -1:  # Only update unexplored cells
-                    self.map_data[x0, y0] = 0  # Open space
-                    neighbors = self.get_neighbors(x0, y0)
+                if self.map_data[x0, y0] == -1: 
+                    self.map_data[x0, y0] = 0 
+                    neighbors = self.get_neighbors_cluster(x0, y0)
                     for nx, ny in neighbors:
                         if self.map_data[nx, ny] == -1:
                             self.map_data[nx, ny] = 0
@@ -333,6 +334,13 @@ class FrontierBasedSearch(Node):
             if e2 < dx:
                 err += dx
                 y0 += sy
+
+    def get_neighbors_cluster (self, x, y):
+        neighbors = [
+            (x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1),
+            (x - 1, y - 1), (x - 1, y + 1), (x + 1, y - 1), (x + 1, y + 1)
+        ]
+        return neighbors
 
     #Takes the row and column of the occupancy self.grid and returns a "real world" point represented by x and y.
     def get_world_pos(self, x, y):
