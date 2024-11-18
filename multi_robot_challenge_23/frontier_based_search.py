@@ -2,7 +2,6 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy, QoSDurabilityPolicy
 from nav_msgs.msg import OccupancyGrid
-#I do not have this file in my directory, therefore there's an error
 from interfaces.srv import FrontierRequest
 from collections import deque
 from geometry_msgs.msg import Point
@@ -14,8 +13,6 @@ import matplotlib.pyplot as plt
 #Import LIDAR
 from sensor_msgs.msg import LaserScan
 import math
-
-#Implemented LIDAR. Map gets updated in real time, takes a lot of computional power. Functions on my machine.
 
 class FrontierBasedSearch(Node):
     def __init__(self):

@@ -11,6 +11,7 @@ from tf_transformations import euler_from_quaternion
 from .a_star import AStar
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy, QoSDurabilityPolicy
 from nav_msgs.msg import OccupancyGrid
+from std_msgs.msg import Bool  # Import the Bool message type
 
 class GoToPointController(Node):
 
@@ -37,6 +38,14 @@ class GoToPointController(Node):
             self.odom_callback,
             10)
         self.get_logger().info(f'Subscription created for {self.namespace}/odom')
+
+        #Created a method for the central controller to receive information for when go_to_point_a_star has reached its destination
+        self.goal_reached_publisher = self.create_publisher(
+            Bool, 
+            f'{self.namespace}/goal_reached', 
+            10
+        )
+        self.get_logger().info(f"Publisher created for {self.namespace}/goal_reached")
         
         qos_profile = QoSProfile(reliability=QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_RELIABLE,
                                 history=QoSHistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_LAST,
@@ -154,30 +163,61 @@ class GoToPointController(Node):
         response.success = success
         self.get_logger().info(f'Go-to-point switch has been set to {self.go_to_goal_switch}')
         return response
-
+    
     def timer_callback(self):
-        if(self.go_to_goal_switch):
+        if self.go_to_goal_switch:
             distance_to_goal = sqrt(pow((self.current_goal_x - self.current_x), 2) + pow((self.current_goal_y - self.current_y), 2))
             desired_yaw = math.atan2(
-                        self.current_goal_y - self.current_y,
-                        self.current_goal_x - self.current_x)
+                self.current_goal_y - self.current_y,
+                self.current_goal_x - self.current_x
+            )
 
             if distance_to_goal <= self.goal_tolerance:
-
                 if self.path:
                     next_goal = self.path.pop(0)
                     self.current_goal_x = next_goal[0]
                     self.current_goal_y = next_goal[1]
                 else:
-                    self.get_logger().info('Goal reached!')
+                    self.get_logger().info('Goal reached! Notifying CentralController.')
+                    
+                    # Publish goal reached notification
+                    self.goal_reached_publisher.publish(Bool(data=True))
+
                     self.stop_robot()
                     self.go_to_goal_switch = False
                     return
                 
-            if (abs(self.normalize_angle(desired_yaw)-self.normalize_angle(self.yaw)) > self.yaw_tolerance):
+            if abs(self.normalize_angle(desired_yaw) - self.normalize_angle(self.yaw)) > self.yaw_tolerance:
                 self.go_to_goal(desired_yaw, 0.0)
             else:
                 self.go_to_goal(desired_yaw, 0.3)
+
+    #def timer_callback(self):
+        #if(self.go_to_goal_switch):
+            #distance_to_goal = sqrt(pow((self.current_goal_x - self.current_x), 2) + pow((self.current_goal_y - self.current_y), 2))
+            #desired_yaw = math.atan2(
+                        #self.current_goal_y - self.current_y,
+                        #self.current_goal_x - self.current_x)
+
+            #if distance_to_goal <= self.goal_tolerance:
+
+                #if self.path:
+                    #next_goal = self.path.pop(0)
+                    #self.current_goal_x = next_goal[0]
+                    #self.current_goal_y = next_goal[1]
+                #else:
+                    #self.get_logger().info('Goal reached! Waiting for frontier_based_search')
+                    #self.stop_robot()
+                    #self.go_to_goal_switch = False
+                    #return
+                
+            #if (abs(self.normalize_angle(desired_yaw)-self.normalize_angle(self.yaw)) > self.yaw_tolerance):
+                #self.go_to_goal(desired_yaw, 0.0)
+            #else:
+                #self.go_to_goal(desired_yaw, 0.3)
+
+
+       
 
 def main(args=None):
     rclpy.init(args=args)

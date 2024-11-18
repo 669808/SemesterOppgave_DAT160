@@ -31,6 +31,8 @@ class AStar:
     def no_obstacle(self, row, column):
 
         distance_from_obstacle = 30 # cm
+        #distance_from_obstacle = int(300 / self.map_info.resolution)  # Convert 300 cm to grid cells
+
 
         if not (self.is_valid(row + distance_from_obstacle, column + distance_from_obstacle) 
                 and self.is_valid(row - distance_from_obstacle, column - distance_from_obstacle)):
