@@ -46,7 +46,3 @@ ros2 run multi_robot_challenge_23 central_controller
 ```sh
 ros2 run scoring scoring
 ```
-
-
-## License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
