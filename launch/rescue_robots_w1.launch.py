@@ -108,21 +108,21 @@ def generate_launch_description():
         output='screen'
     )
 
-    # go_to_point_server_tb3_0 = Node(
-    #     package='multi_robot_challenge_23',
-    #     executable='go_to_point_a_star',
-    #     name='tb3_0_go_to_point_service',
-    #     parameters=[{'use_sim_time': use_sim_time},
-    #                 {'namespace': first_tb3}]
-    # )
+    go_to_point_server_tb3_0 = Node(
+        package='multi_robot_challenge_23',
+        executable='go_to_point_a_star',
+        name='tb3_0_go_to_point_service',
+        parameters=[{'use_sim_time': use_sim_time},
+                    {'namespace': first_tb3}]
+    )
 
-    # go_to_point_server_tb3_1 = Node(
-    #     package='multi_robot_challenge_23',
-    #     executable='go_to_point_a_star',
-    #     name='tb3_1_go_to_point_service',
-    #     parameters=[{'use_sim_time': use_sim_time},
-    #                 {'namespace': second_tb3}]
-    # )
+    go_to_point_server_tb3_1 = Node(
+        package='multi_robot_challenge_23',
+        executable='go_to_point_a_star',
+        name='tb3_1_go_to_point_service',
+        parameters=[{'use_sim_time': use_sim_time},
+                    {'namespace': second_tb3}]
+    )
 
     map_filter = Node(
         package='multi_robot_challenge_23',
@@ -135,19 +135,19 @@ def generate_launch_description():
     # Add this Node for the frontier-based search
 
     #Legge til frontier search node i launch filen
-    # frontier_search_node = Node(
-    #     package='multi_robot_challenge_23',  
-    #     executable='frontier_based_search',  
-    #     name='frontier_based_search',
-    #     output='screen',  
-    #     parameters=[
-    #          {'use_sim_time': LaunchConfiguration('use_sim_time')}
-    #     ],
-    #     remappings=[
-    #         ('/map', '/map'),  
-    #         ('/cmd_vel', '/tb3_0/cmd_vel'),  
-    #     ]
-    # )
+    frontier_search_node = Node(
+        package='multi_robot_challenge_23',  
+        executable='frontier_based_search',  
+        name='frontier_based_search',
+        output='screen',  
+        parameters=[
+             {'use_sim_time': LaunchConfiguration('use_sim_time')}
+        ],
+        remappings=[
+            ('/map', '/map'),  
+            ('/cmd_vel', '/tb3_0/cmd_vel'),  
+        ]
+    )
 
 
     return LaunchDescription([
@@ -161,7 +161,7 @@ def generate_launch_description():
         map_filter,
         # scoring,
         # aruco_recognition,  
-        # go_to_point_server_tb3_0,
-        # go_to_point_server_tb3_1,
-        # frontier_search_node,
+        go_to_point_server_tb3_0,
+        go_to_point_server_tb3_1,
+        frontier_search_node,
     ])
