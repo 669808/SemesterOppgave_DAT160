@@ -22,6 +22,7 @@ class FrontierBasedSearch(Node):
         self.map = None
         self.map_recieved = False
         self.frontier_centroids = []
+        self.previous_frontier_centroids = []
 
         qos_profile = QoSProfile(reliability=QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_RELIABLE,
                                 history=QoSHistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_LAST,
@@ -177,7 +178,7 @@ class FrontierBasedSearch(Node):
     
     def addValidCentroids(self, centroids):
         distance_to_wall_threshold_metres = 0.3
-        existing_centroid_distance_threshold_metres = 1 
+        existing_centroid_distance_threshold_metres = 0.5 
 
         centroid_threshold = int(existing_centroid_distance_threshold_metres / self.map_info.resolution)
         wall_threshold = int(distance_to_wall_threshold_metres / self.map_info.resolution)
@@ -188,9 +189,13 @@ class FrontierBasedSearch(Node):
 
             if self.tooCloseToExistingCentroid(centroid, centroid_threshold):
                 continue
+            
+            if self.isPreviousCentroid(centroid):
+                continue
 
             self.frontier_centroids.append(centroid)
 
+    # Ensures that the new centroid is not too close to a wall
     def tooCloseToWall(self, centroid, threshold):
         x, y = centroid
         threshold_cells = [
@@ -207,12 +212,24 @@ class FrontierBasedSearch(Node):
 
         return False
 
-    #NOT TESTED
+    # Ensures that the new centroid is not too close to an existing centroid
     def tooCloseToExistingCentroid(self, centroid, threshold):
         x, y = centroid
         for cx, cy in self.frontier_centroids:
             if abs(x - cx) < threshold and abs(y - cy) < threshold:
                 return True
+        return False
+
+    # Ensures that the same centroid can't be given to seperate robots
+    def isPreviousCentroid(self, centroid):
+        if not self.previous_frontier_centroids:
+            return False
+        
+        x, y = centroid
+        for cx, cy in self.previous_frontier_centroids:
+            if abs(x - cx) < 5 and abs(y - cy) < 5:
+                return True
+            
         return False
 
     # Utilize a BFS approach to find the frontier cells from the robots position
@@ -268,7 +285,6 @@ class FrontierBasedSearch(Node):
             if cell not in visited:
                 cluster = bfs_find_cluster(cell)
                 if cluster:
-                    # Calculate the centroid of the cluster
                     cx = sum(x for x, y in cluster) / len(cluster)
                     cy = sum(y for x, y in cluster) / len(cluster)
                     centroids.append((int(cx), int(cy)))
@@ -288,6 +304,7 @@ class FrontierBasedSearch(Node):
             current_pos = queue.popleft()
             if current_pos in self.frontier_centroids:
                 self.get_logger().info("Found nearest frontier")
+                self.previous_frontier_centroids.append(current_pos)
                 return current_pos
 
             for neighbor in self.get_neighbors(*current_pos):
@@ -321,7 +338,6 @@ class FrontierBasedSearch(Node):
         angles_radians = np.arange(msg.angle_min, msg.angle_max, msg.angle_increment)
         ranges = np.array(msg.ranges)
 
-        # Update the grid for each lidar point
         for angle_rad, distance_metres in zip(angles_radians, ranges):
             if distance_metres < msg.range_min or distance_metres > msg.range_max:
                 distance_metres = msg.range_max
@@ -336,6 +352,7 @@ class FrontierBasedSearch(Node):
 
             if 0 <= grid_x < self.map_info.width and 0 <= grid_y < self.map_info.height:
                 self.fill_open_cells(robot_x, robot_y, grid_x, grid_y)
+
         self.pub_frontier_map.publish(self.frontier_occupancygrid)
     
     def fill_open_cells(self, x0, y0, x1, y1):
@@ -384,7 +401,7 @@ class FrontierBasedSearch(Node):
         return points
     
     
-    #Helper functions below
+    # Helper functions below
 
     def isOccupied(self, x, y):
         return self.map_data[x, y] == 100
@@ -412,18 +429,19 @@ class FrontierBasedSearch(Node):
         y = int(map_iter - x*self.map_msg.info.width)
         return [x, y]
     
+    # To update the 1D occupancy grid we need the index 
     def get_map_iter(self, x, y):
         map_iter = x*self.frontier_occupancygrid.info.width + y
         return map_iter
     
-    #Takes the row and column of the occupancy self.grid and returns a "real world" point represented by x and y.
+    # Takes the row and column of the occupancy self.grid and returns a "real world" point represented by x and y.
     def get_world_pos(self, x, y):
         x_pos = round(self.map_info.origin.position.x + y*self.map_info.resolution, 2)
         y_pos = round(self.map_info.origin.position.y + x*self.map_info.resolution, 2)
         world_pos = (x_pos, y_pos)
         return world_pos
     
-    #Takes a point and converts it into corresponding row and column in the occupancy self.grid
+    # Takes a point and converts it into corresponding row and column in the occupancy self.grid
     def get_map_coords(self, point):
         x = int((point[1] - self.map_info.origin.position.y) / self.map_info.resolution)
         y = int((point[0] - self.map_info.origin.position.x) / self.map_info.resolution)
