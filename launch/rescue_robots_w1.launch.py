@@ -86,17 +86,17 @@ def generate_launch_description():
         }.items()
     )
 
-    scoring = Node(
-         package='scoring',
-         executable='scoring',
-         name='scoring'
-    )
+    # scoring = Node(
+    #      package='scoring',
+    #      executable='scoring',
+    #      name='scoring'
+    # )
 
     # Include the ArUco recognition launch file
-    aruco_recognition = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(aruco_recognition_launch_file),
-        launch_arguments={'namespace': first_tb3}.items(),  
-    )
+    # aruco_recognition = IncludeLaunchDescription(
+    #     PythonLaunchDescriptionSource(aruco_recognition_launch_file),
+    #     launch_arguments={'namespace': first_tb3}.items(),  
+    # )
 
     # Starting rviz
     rviz_node = Node(
@@ -108,38 +108,46 @@ def generate_launch_description():
         output='screen'
     )
 
-    go_to_point_server_tb3_0 = Node(
-        package='multi_robot_challenge_23',
-        executable='go_to_point_a_star',
-        name='tb3_0_go_to_point_service',
-        parameters=[{'use_sim_time': use_sim_time},
-                    {'namespace': first_tb3}]
-    )
+    # go_to_point_server_tb3_0 = Node(
+    #     package='multi_robot_challenge_23',
+    #     executable='go_to_point_a_star',
+    #     name='tb3_0_go_to_point_service',
+    #     parameters=[{'use_sim_time': use_sim_time},
+    #                 {'namespace': first_tb3}]
+    # )
 
-    go_to_point_server_tb3_1 = Node(
+    # go_to_point_server_tb3_1 = Node(
+    #     package='multi_robot_challenge_23',
+    #     executable='go_to_point_a_star',
+    #     name='tb3_1_go_to_point_service',
+    #     parameters=[{'use_sim_time': use_sim_time},
+    #                 {'namespace': second_tb3}]
+    # )
+
+    map_filter = Node(
         package='multi_robot_challenge_23',
-        executable='go_to_point_a_star',
-        name='tb3_1_go_to_point_service',
-        parameters=[{'use_sim_time': use_sim_time},
-                    {'namespace': second_tb3}]
+        executable='map_filter',
+        name='map_filter',
+        parameters=[{'use_sim_time': use_sim_time}]
     )
+        
 
     # Add this Node for the frontier-based search
 
     #Legge til frontier search node i launch filen
-    frontier_search_node = Node(
-        package='multi_robot_challenge_23',  
-        executable='frontier_based_search',  
-        name='frontier_based_search',
-        output='screen',  
-        parameters=[
-             {'use_sim_time': LaunchConfiguration('use_sim_time')}
-        ],
-        remappings=[
-            ('/map', '/map'),  
-            ('/cmd_vel', '/tb3_0/cmd_vel'),  
-        ]
-    )
+    # frontier_search_node = Node(
+    #     package='multi_robot_challenge_23',  
+    #     executable='frontier_based_search',  
+    #     name='frontier_based_search',
+    #     output='screen',  
+    #     parameters=[
+    #          {'use_sim_time': LaunchConfiguration('use_sim_time')}
+    #     ],
+    #     remappings=[
+    #         ('/map', '/map'),  
+    #         ('/cmd_vel', '/tb3_0/cmd_vel'),  
+    #     ]
+    # )
 
 
     return LaunchDescription([
@@ -150,9 +158,10 @@ def generate_launch_description():
         tb3_0,
         tb3_1,
         rviz_node,
-        scoring,
-        aruco_recognition,  
-        go_to_point_server_tb3_0,
-        go_to_point_server_tb3_1,
-        frontier_search_node,
+        map_filter,
+        # scoring,
+        # aruco_recognition,  
+        # go_to_point_server_tb3_0,
+        # go_to_point_server_tb3_1,
+        # frontier_search_node,
     ])

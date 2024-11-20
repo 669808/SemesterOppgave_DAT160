@@ -18,8 +18,8 @@ class GoToPointController(Node):
     def __init__(self):
         super().__init__('go_to_point')
 
-        # Wait for the map to be read
-        time.sleep(20)
+        # Wait for all other services to be up and running
+        time.sleep(15)
 
         self.declare_parameter('namespace', '')
         self.namespace = self.get_parameter('namespace').get_parameter_value().string_value        
@@ -54,7 +54,7 @@ class GoToPointController(Node):
 
         self.map_subscription = self.create_subscription(
             OccupancyGrid, 
-            '/map', 
+            '/filtered_map', 
             callback=self.clbk_map, 
             qos_profile=qos_profile)
         self.get_logger().info('Subscription created for /map')
