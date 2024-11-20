@@ -91,7 +91,6 @@ class GoToPointController(Node):
         self.timer = self.create_timer(timer_period, self.timer_callback) 
         self.get_logger().info('Timer created')
 
-    # We read the map from the topic and create a grid
     def clbk_map(self, msg):
         map_width = msg.info.width
         map_height = msg.info.height
@@ -166,58 +165,42 @@ class GoToPointController(Node):
     
     def timer_callback(self):
         if self.go_to_goal_switch:
-            distance_to_goal = sqrt(pow((self.current_goal_x - self.current_x), 2) + pow((self.current_goal_y - self.current_y), 2))
-            desired_yaw = math.atan2(
-                self.current_goal_y - self.current_y,
-                self.current_goal_x - self.current_x
-            )
+            self.follow_path()
+            
 
-            if distance_to_goal <= self.goal_tolerance:
-                if self.path:
-                    next_goal = self.path.pop(0)
-                    self.current_goal_x = next_goal[0]
-                    self.current_goal_y = next_goal[1]
-                else:
-                    self.get_logger().info('Goal reached! Notifying CentralController.')
-                    
-                    # Publish goal reached notification
-                    self.goal_reached_publisher.publish(Bool(data=True))
-
-                    self.stop_robot()
-                    self.go_to_goal_switch = False
-                    return
-                
-            if abs(self.normalize_angle(desired_yaw) - self.normalize_angle(self.yaw)) > self.yaw_tolerance:
-                self.go_to_goal(desired_yaw, 0.0)
+    def follow_path(self):
+        if self.isAtCurrentGoal():
+            if self.path:
+                next_goal = self.path.pop(0)
+                self.current_goal_x = next_goal[0]
+                self.current_goal_y = next_goal[1]
             else:
-                self.go_to_goal(desired_yaw, 0.3)
+                self.get_logger().info('Goal reached! Publishing to subscribers.')
 
-    #def timer_callback(self):
-        #if(self.go_to_goal_switch):
-            #distance_to_goal = sqrt(pow((self.current_goal_x - self.current_x), 2) + pow((self.current_goal_y - self.current_y), 2))
-            #desired_yaw = math.atan2(
-                        #self.current_goal_y - self.current_y,
-                        #self.current_goal_x - self.current_x)
+                self.goal_reached_publisher.publish(Bool(data=True))
 
-            #if distance_to_goal <= self.goal_tolerance:
+                self.stop_robot()
+                self.go_to_goal_switch = False
+                return
 
-                #if self.path:
-                    #next_goal = self.path.pop(0)
-                    #self.current_goal_x = next_goal[0]
-                    #self.current_goal_y = next_goal[1]
-                #else:
-                    #self.get_logger().info('Goal reached! Waiting for frontier_based_search')
-                    #self.stop_robot()
-                    #self.go_to_goal_switch = False
-                    #return
-                
-            #if (abs(self.normalize_angle(desired_yaw)-self.normalize_angle(self.yaw)) > self.yaw_tolerance):
-                #self.go_to_goal(desired_yaw, 0.0)
-            #else:
-                #self.go_to_goal(desired_yaw, 0.3)
+        desired_yaw = math.atan2(
+            self.current_goal_y - self.current_y,
+            self.current_goal_x - self.current_x
+        )
+
+        if self.correct_angle(desired_yaw):
+            self.go_to_goal(desired_yaw, 0.3) 
+        else:
+            self.go_to_goal(desired_yaw, 0.0)
+
+    def correct_angle(self, desired_yaw):
+        yaw_diff = abs(self.normalize_angle(desired_yaw) - self.normalize_angle(self.yaw))
+        return (yaw_diff < self.yaw_tolerance)
 
 
-       
+    def isAtCurrentGoal(self):
+        distance_to_goal = sqrt(pow((self.current_goal_x - self.current_x), 2) + pow((self.current_goal_y - self.current_y), 2))
+        return distance_to_goal <= self.goal_tolerance
 
 def main(args=None):
     rclpy.init(args=args)

@@ -82,7 +82,9 @@ class AStar:
         path.append((goal_x, goal_y))
 
         world_pos_path = []
-        for point in path:
+        for i, point in enumerate(path):
+            if i % 2 == 0:
+                continue
             point = self.get_world_pos(point[0], point[1])
             world_pos_path.append(point)
         world_pos_path.reverse()
