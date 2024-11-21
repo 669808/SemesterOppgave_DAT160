@@ -34,6 +34,8 @@ setup(
             'central_controller = multi_robot_challenge_23.central_controller:main',
             'frontier_based_search = multi_robot_challenge_23.frontier_based_search:main',
             'map_filter = multi_robot_challenge_23.map_filter:main',
+            'turtlebot3 = multi_robot_challenge_23.turtlebot3:main',
+            'main_controller = multi_robot_challenge_23.main_controller:main',
         ],
     },
 )

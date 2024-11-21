@@ -165,10 +165,6 @@ class FrontierBasedSearch(Node):
         centroids = self.find_centroids(frontier_cells)
 
         self.addValidCentroids(centroids)
-        
-        self.get_logger().info("Centroids updated")
-        self.get_logger().info(f"Found {len(self.frontier_centroids)} centroids")
-
 
         if(not self.frontier_centroids):
             self.get_logger().warn("No valid centroids found.")
@@ -226,13 +222,17 @@ class FrontierBasedSearch(Node):
             return False
         
         x, y = centroid
+        
+        for cx, cy in self.previous_frontier_centroids:
+            if abs(x - cx) < 5 and abs(y - cy) < 5:
+                return True
+        
         for cx, cy in self.previous_frontier_centroids:
             if abs(x - cx) < 5 and abs(y - cy) < 5:
                 return True
             
         return False
 
-    # Utilize a BFS approach to find the frontier cells from the robots position
     def find_frontier_cells(self, robot_current_pos):
         queue = deque([robot_current_pos])
         visited = set([robot_current_pos])
@@ -252,7 +252,6 @@ class FrontierBasedSearch(Node):
                 elif self.isUnexplored(nx, ny):
                     frontier_cells = self.add_cell_ifValid(nx, ny, frontier_cells)
 
-        self.get_logger().info(f"Found {len(frontier_cells)} frontier cells")
         return frontier_cells
 
     def add_cell_ifValid(self, x, y, frontier_cells: list):
@@ -299,11 +298,10 @@ class FrontierBasedSearch(Node):
         queue = deque([robot_pos])
         visited = set()
         visited.add(robot_pos)
-        self.get_logger().info("Finding nearest frontier")
         while queue:
             current_pos = queue.popleft()
             if current_pos in self.frontier_centroids:
-                self.get_logger().info("Found nearest frontier")
+                self.frontier_centroids.remove(current_pos)
                 self.previous_frontier_centroids.append(current_pos)
                 return current_pos
 

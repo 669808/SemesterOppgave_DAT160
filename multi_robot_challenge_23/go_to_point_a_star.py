@@ -151,16 +151,12 @@ class GoToPointController(Node):
         if self.map_data is not None:
             self.path = self.a_star_class.a_star_search(current, goal)
             next_goal = self.path.pop(0)
-            self.get_logger().info("The given path: ")
-            for p in self.path:
-                self.get_logger().info(f"Point: ({p[0]}, {p[1]})")
             self.current_goal_x = next_goal[0]
             self.current_goal_y = next_goal[1]
         else:
             self.get_logger().error('Map data is None')
             success = False
         response.success = success
-        self.get_logger().info(f'Go-to-point switch has been set to {self.go_to_goal_switch}')
         return response
     
     def timer_callback(self):
