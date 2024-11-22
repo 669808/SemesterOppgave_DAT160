@@ -1,6 +1,7 @@
 import time
 import rclpy
 import math
+import random
 from interfaces.srv import SetGoal
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
@@ -12,6 +13,7 @@ from .a_star import AStar
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy, QoSDurabilityPolicy
 from nav_msgs.msg import OccupancyGrid
 from std_msgs.msg import Bool  # Import the Bool message type
+from sensor_msgs.msg import LaserScan
 
 class GoToPointController(Node):
 
@@ -38,6 +40,14 @@ class GoToPointController(Node):
             self.odom_callback,
             10)
         self.get_logger().info(f'Subscription created for {self.namespace}/odom')
+
+        self.lidar_front = 0.0
+        self.lidar_sensor = self.create_subscription(
+            LaserScan,
+            f'{self.namespace}/scan',
+            self.lidar_callback,
+            10
+        )
 
         #Created a method for the central controller to receive information for when go_to_point_a_star has reached its destination
         self.goal_reached_publisher = self.create_publisher(
@@ -118,6 +128,25 @@ class GoToPointController(Node):
         (roll, pitch, yaw) = euler_from_quaternion(orientation_list)
         self.yaw = yaw
 
+    def lidar_callback(self, msg):
+        self.lidar_front = min(min(msg.ranges[0:3]), min(msg.ranges[357:359]))
+
+    def has_crashed(self):
+        return self.lidar_front < 0.2
+    
+    def handle_collision(self):
+        self.stop_robot()
+        self.get_logger().info('Collision detected!')
+        Twist().linear.x = -0.5
+        Twist().angular.z = 0.0
+        self.cmd_vel_publisher.publish(Twist())
+        time.sleep(2)
+        self.stop_robot()
+        num = random.randint(1, 15)
+        time.sleep(num)
+        self.go_to_goal_switch = True
+
+
     def normalize_angle(self, angle):
         return (angle + math.pi) % (2 * math.pi) - math.pi
 
@@ -127,7 +156,7 @@ class GoToPointController(Node):
         desired_yaw = self.normalize_angle(desired_yaw)
         delta_yaw = self.normalize_angle(desired_yaw - current_yaw)
         angular_speed = 1.0 * delta_yaw
-        max_angular_speed = 0.3
+        max_angular_speed = 0.4
         twist.angular.z = max(min(angular_speed, max_angular_speed), -max_angular_speed)
         twist.linear.x = linear_vel
         self.cmd_vel_publisher.publish(twist)
@@ -150,9 +179,15 @@ class GoToPointController(Node):
         goal = (self.goal_x, self.goal_y)
         if self.map_data is not None:
             self.path = self.a_star_class.a_star_search(current, goal)
-            next_goal = self.path.pop(0)
-            self.current_goal_x = next_goal[0]
-            self.current_goal_y = next_goal[1]
+            if self.path is None:
+                self.goal_reached_publisher.publish(Bool(data=True))
+                self.stop_robot()
+                self.go_to_goal_switch = False
+            else:
+                next_goal = self.path.pop(0)
+                self.current_goal_x = next_goal[0]
+                self.current_goal_y = next_goal[1]
+            response.success = True
         else:
             self.get_logger().error('Map data is None')
             success = False
@@ -162,6 +197,8 @@ class GoToPointController(Node):
     def timer_callback(self):
         if self.go_to_goal_switch:
             self.follow_path()
+            if self.has_crashed():
+                self.handle_collision()
             
 
     def follow_path(self):
@@ -185,7 +222,7 @@ class GoToPointController(Node):
         )
 
         if self.correct_angle(desired_yaw):
-            self.go_to_goal(desired_yaw, 0.3) 
+            self.go_to_goal(desired_yaw, 0.4) 
         else:
             self.go_to_goal(desired_yaw, 0.0)
 
