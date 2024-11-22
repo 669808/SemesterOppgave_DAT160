@@ -137,9 +137,10 @@ class GoToPointController(Node):
     def handle_collision(self):
         self.stop_robot()
         self.get_logger().info('Collision detected!')
-        Twist().linear.x = -0.5
-        Twist().angular.z = 0.0
-        self.cmd_vel_publisher.publish(Twist())
+        twist = Twist()
+        twist.linear.x = -0.5
+        twist.angular.z = 0.0
+        self.cmd_vel_publisher.publish(twist)
         time.sleep(2)
         self.stop_robot()
         num = random.randint(1, 15)
