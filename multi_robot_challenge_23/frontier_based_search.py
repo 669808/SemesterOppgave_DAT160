@@ -294,7 +294,7 @@ class FrontierBasedSearch(Node):
             self.get_logger().info("No frontiers found")
             return None
 
-        #Use a BFS approach to find the nearest frontier
+        # Use a BFS approach to find the nearest frontier
         queue = deque([robot_pos])
         visited = set()
         visited.add(robot_pos)
@@ -306,7 +306,7 @@ class FrontierBasedSearch(Node):
                 return current_pos
 
             for neighbor in self.get_neighbors(*current_pos):
-                if neighbor not in visited:
+                if neighbor not in visited and self.map_data[neighbor[0], neighbor[1]] != 100:
                     visited.add(neighbor)
                     queue.append(neighbor)
 
