@@ -379,22 +379,22 @@ class FrontierBasedSearch(Node):
     def breseham_line(self, x0, y0, x1, y1):
         points = []
 
-        dx = abs(x1 - x0)
-        dy = abs(y1 - y0)
-        sx = 1 if x0 < x1 else -1
-        sy = 1 if y0 < y1 else -1
-        err = dx - dy
+        delta_x = abs(x1 - x0)
+        delta_y = abs(y1 - y0)
+        step_x = 1 if x0 < x1 else -1
+        step_y = 1 if y0 < y1 else -1
+        error = delta_x - delta_y
 
         while x0 != x1 or y0 != y1:
             if self.isValidCell(x0, y0):
                 points.append((x0, y0))
-            e2 = err * 2
-            if e2 > -dy:
-                err -= dy
-                x0 += sx
-            if e2 < dx:
-                err += dx
-                y0 += sy
+            error2 = error * 2
+            if error2 > -delta_y:
+                error -= delta_y
+                x0 += step_x
+            if error2 < delta_x:
+                error += delta_x
+                y0 += step_y
 
         return points
     
