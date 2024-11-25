@@ -109,6 +109,43 @@ def generate_launch_description():
                     {'namespace': second_tb3}]
     )
 
+    turtlebot3_0_controller = Node(
+        package='multi_robot_challenge_23',
+        executable='turtlebot3',
+        name='turtlebot3_0_controller',
+        parameters=[{'use_sim_time': use_sim_time},
+                    {'namespace': first_tb3}]
+    )
+
+    turtlebot3_1_controller = Node(
+        package='multi_robot_challenge_23',
+        executable='turtlebot3',
+        name='turtlebot3_1_controller',
+        parameters=[{'use_sim_time': use_sim_time},
+                    {'namespace': second_tb3}]
+    )
+
+    map_filter = Node(
+        package='multi_robot_challenge_23',
+        executable='map_filter',
+        name='map_filter',
+        parameters=[{'use_sim_time': use_sim_time}]
+    )
+        
+    frontier_search_node = Node(
+        package='multi_robot_challenge_23',  
+        executable='frontier_based_search',  
+        name='frontier_based_search',
+        output='screen',  
+        parameters=[
+             {'use_sim_time': LaunchConfiguration('use_sim_time')}
+        ],
+        remappings=[
+            ('/map', '/map'),  
+            ('/cmd_vel', '/tb3_0/cmd_vel'),  
+        ]
+    )
+
     return LaunchDescription([
         sim_time_arg,
         gazebo,
@@ -118,5 +155,9 @@ def generate_launch_description():
         tb3_1,
         rviz_node,
         go_to_point_server_tb3_0,
-        go_to_point_server_tb3_1
+        go_to_point_server_tb3_1,
+        turtlebot3_0_controller,
+        turtlebot3_1_controller,
+        map_filter,
+        frontier_search_node
     ])

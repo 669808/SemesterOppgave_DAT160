@@ -147,10 +147,6 @@ def generate_launch_description():
         parameters=[{'use_sim_time': use_sim_time}]
     )
         
-
-    # Add this Node for the frontier-based search
-
-    #Legge til frontier search node i launch filen
     frontier_search_node = Node(
         package='multi_robot_challenge_23',  
         executable='frontier_based_search',  
