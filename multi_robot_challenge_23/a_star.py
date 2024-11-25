@@ -91,6 +91,40 @@ class AStar:
         
         return world_pos_path
 
+    def main_loop(self, closedlist, cell_details, open_list, goal):
+        while len(open_list) > 0:
+            p = heapq.heappop(open_list)
+            i = p[1]
+            j = p[2]
+            closedlist[i][j] = True
+
+            directions = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]
+            for dir in directions:
+                new_i = i + dir[0]
+                new_j = j + dir[1]
+
+                if not (self.cellIsValid(new_i, new_j) and self.noObstacleInCell(new_i, new_j) and not closedlist[new_i][new_j]):
+                    continue
+
+                if self.cellIsDestination(new_i, new_j, goal):
+                    cell_details[new_i][new_j].parent_i = i
+                    cell_details[new_i][new_j].parent_j = j
+                    print("The goal cell is found")
+                    path = self.findPath(cell_details, goal[0], goal[1])
+                    return path
+                    
+                g_new = cell_details[i][j].g + 1.0
+                h_new = self.calculateHeuristicValue(new_i, new_j, goal)
+                f_new = g_new + h_new
+
+                if cell_details[new_i][new_j].f == float('inf') or cell_details[new_i][new_j].f > f_new:
+                    heapq.heappush(open_list, (f_new, new_i, new_j))
+                    cell_details[new_i][new_j].f = f_new
+                    cell_details[new_i][new_j].g = g_new
+                    cell_details[new_i][new_j].h = h_new
+                    cell_details[new_i][new_j].parent_i = i
+                    cell_details[new_i][new_j].parent_j = j
+
     def a_star_search(self, start, goal):
 
         start = self.get_map_coords(start)
@@ -124,40 +158,11 @@ class AStar:
         heapq.heappush(open_list, (0.0, i, j))
 
         # Main loop of A* search algorithm
-        while len(open_list) > 0:
-            p = heapq.heappop(open_list)
-            i = p[1]
-            j = p[2]
-            closedlist[i][j] = True
+        path = self.main_loop(closedlist, cell_details, open_list, goal)
 
-            directions = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]
-            for dir in directions:
-                new_i = i + dir[0]
-                new_j = j + dir[1]
-
-                if not (self.cellIsValid(new_i, new_j) and self.noObstacleInCell(new_i, new_j) and not closedlist[new_i][new_j]):
-                    continue
-
-                if self.cellIsDestination(new_i, new_j, goal):
-                    # Set the parent of the goal cell
-                    cell_details[new_i][new_j].parent_i = i
-                    cell_details[new_i][new_j].parent_j = j
-                    print("The goal cell is found")
-                    # Trace the path back and return it
-                    path = self.findPath(cell_details, goal[0], goal[1])
-                    return path
-                    
-                g_new = cell_details[i][j].g + 1.0
-                h_new = self.calculateHeuristicValue(new_i, new_j, goal)
-                f_new = g_new + h_new
-
-                if cell_details[new_i][new_j].f == float('inf') or cell_details[new_i][new_j].f > f_new:
-                    heapq.heappush(open_list, (f_new, new_i, new_j))
-                    cell_details[new_i][new_j].f = f_new
-                    cell_details[new_i][new_j].g = g_new
-                    cell_details[new_i][new_j].h = h_new
-                    cell_details[new_i][new_j].parent_i = i
-                    cell_details[new_i][new_j].parent_j = j
+        if path is not None:
+            return path
+        
         print("A* algorithm failed. Destination not found")
         return None
     
