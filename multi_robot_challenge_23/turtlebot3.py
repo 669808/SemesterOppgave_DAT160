@@ -1,8 +1,9 @@
 import rclpy 
+
 from rclpy.node import Node
-from interfaces.srv import SetGoal
+
+from interfaces.srv import SetGoal, FrontierRequest
 from std_msgs.msg import Bool
-from interfaces.srv import FrontierRequest
 from geometry_msgs.msg import Pose
 from nav_msgs.msg import Odometry
 from std_srvs.srv import SetBool

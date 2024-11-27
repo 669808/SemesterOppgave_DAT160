@@ -2,18 +2,22 @@ import time
 import rclpy
 import math
 import random
-from interfaces.srv import SetGoal
+
+from .a_star import AStar
+
 from rclpy.node import Node
-from geometry_msgs.msg import Twist
-from nav_msgs.msg import Odometry
 from rclpy.task import Future
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy, QoSDurabilityPolicy
+
 from math import atan2, sqrt, pow
 from tf_transformations import euler_from_quaternion
-from .a_star import AStar
-from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy, QoSDurabilityPolicy
-from nav_msgs.msg import OccupancyGrid
-from std_msgs.msg import Bool  # Import the Bool message type
+
+from geometry_msgs.msg import Twist
+from nav_msgs.msg import Odometry, OccupancyGrid
+from std_msgs.msg import Bool 
 from sensor_msgs.msg import LaserScan
+from interfaces.srv import SetGoal
+
 
 class GoToPointController(Node):
 

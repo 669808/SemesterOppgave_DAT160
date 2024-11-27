@@ -1,10 +1,7 @@
-import math
 import heapq
 
-# Define the Cell class
 class Cell:
     def __init__(self):
-        # Row and Column
         self.parent_i = 0 
         self.parent_j = 0
 

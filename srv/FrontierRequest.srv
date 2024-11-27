@@ -1,4 +1,0 @@
-geometry_msgs/Point current_pos
----
-bool success
-geometry_msgs/Point frontier

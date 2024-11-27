@@ -1,17 +1,17 @@
 import rclpy
+import numpy as np
+import math
+
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy, QoSDurabilityPolicy
-from nav_msgs.msg import OccupancyGrid
-from interfaces.srv import FrontierRequest
+
 from collections import deque
+
+from nav_msgs.msg import OccupancyGrid, Odometry
 from geometry_msgs.msg import Point
-from nav_msgs.msg import Odometry
-import numpy as np
-import matplotlib.colors as mcolors
-import time
-import matplotlib.pyplot as plt
 from sensor_msgs.msg import LaserScan
-import math
+from interfaces.srv import FrontierRequest
+
 
 class FrontierBasedSearch(Node):
     def __init__(self):
