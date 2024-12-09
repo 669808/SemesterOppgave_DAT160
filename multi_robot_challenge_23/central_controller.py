@@ -7,9 +7,31 @@ from std_msgs.msg import Int64
 from geometry_msgs.msg import Pose
 from interfaces.srv import SetGoal
 from interfaces.srv import FrontierRequest
-from std_msgs.msg import Bool  # Import the Bool message type
+#from std_msgs.msg import Bool  # Import the Bool message type
+from geometry_msgs.msg import Pose 
+
 
 class CentralController(Node):
+
+    #Unsure if my commits have been working, testing
+    #Communication between a-star controller and go-to-point
+    def goal_reached_callback_tb3_0(self, msg):
+        """Callback for tb3_0 goal reached notification."""
+        self.get_logger().info(f"tb3_0 reached its goal at position: x={msg.position.x}, y={msg.position.y}. Initiating frontier-based search.")
+        self.robot_states['tb3_0']['goal_reached'] = True
+
+        # Use the received position to send a frontier-based search request
+        self.send_frontier_request(msg.position.x, msg.position.y)
+
+    def goal_reached_callback_tb3_1(self, msg):
+        """Callback for tb3_1 goal reached notification."""
+        self.get_logger().info(f"tb3_1 reached its goal at position: x={msg.position.x}, y={msg.position.y}. Initiating frontier-based search.")
+        self.robot_states['tb3_1']['goal_reached'] = True
+
+        # Use the received position to send a frontier-based search request
+        self.send_frontier_request(msg.position.x, msg.position.y)
+    
+
 
     def __init__(self):
         super().__init__('CentralController')
@@ -34,6 +56,20 @@ class CentralController(Node):
         while not self.client_tb3_1.wait_for_service(timeout_sec=2.0):
             print("Waiting for service: tb3_1")
 
+        self.create_subscription(
+            Pose,
+            'tb3_0/goal_reached',
+            self.goal_reached_callback_tb3_0,
+            10
+        )
+        
+        self.create_subscription(
+            Pose,
+            'tb3_1/goal_reached',
+            self.goal_reached_callback_tb3_1,
+            10
+        )
+
 
         self.client_frontier_based_search = self.create_client(FrontierRequest, 'frontier_based_search')
         while not self.client_frontier_based_search.wait_for_service(timeout_sec=2.0):
@@ -45,21 +81,6 @@ class CentralController(Node):
         # self.subscription_marker_id_tb3_0 = self.create_subscription(Int64,'tb3_0/marker_id',self.marker_id_callback_tb3_0,10)
         # self.subscription_marker_id_tb3_1 = self.create_subscription(Int64,'tb3_1/marker_id',self.marker_id_callback_tb3_1,10)
         #self. scoring = self.create_client(SetMarkerPosition, 'scoring')
-
-
-        # Add subscriptions to CentralController for goal reached topics
-        self.subscription_tb3_0_goal = self.create_subscription(
-            Bool,
-            'tb3_0/goal_reached',
-            self.goal_reached_callback_tb3_0,
-            10
-        )
-        self.subscription_tb3_1_goal = self.create_subscription(
-            Bool,
-            'tb3_1/goal_reached',
-            self.goal_reached_callback_tb3_1,
-            10
-        )
 
         self.requestsent = False
         self.timer = self.create_timer(0.1, self.timer_callback)
