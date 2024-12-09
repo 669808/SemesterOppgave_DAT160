@@ -10,8 +10,7 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 import xacro
 
-
-# Name of the package that conatins the robot description xacro file
+# Name of the package that contains the robot description xacro file
 package_name_robot = 'multi_robot_challenge_23'
 
 # Function to read the robot description from the xacro file and return a SetLaunchConfiguration object
@@ -31,7 +30,7 @@ def get_robot_description(context):
     return [SetLaunchConfiguration('robot_desc', robot_description)]
 
 def generate_launch_description():
-    #Declare launch arguments that can be set by a parent launch file
+    # Declare launch arguments that can be set by a parent launch file
     namespace_launch_arg = DeclareLaunchArgument(
         'namespace',
         default_value='tb3_5'
@@ -49,14 +48,14 @@ def generate_launch_description():
         default_value='0.0'
     )
 
-    #Read launch arguments as a launch configuration object
+    # Read launch arguments as a launch configuration object
     namespace = LaunchConfiguration('namespace')
     x = LaunchConfiguration('x')
     y = LaunchConfiguration('y')
     yaw = LaunchConfiguration('yaw')
     use_sim_time = LaunchConfiguration('use_sim_time')
 
-    #Read out robot description from the xacro file and set it as a launch configuration
+    # Read out robot description from the xacro file and set it as a launch configuration
     robot_description_arg = OpaqueFunction(function=get_robot_description)
     robot_description = LaunchConfiguration('robot_desc')
 
@@ -68,7 +67,7 @@ def generate_launch_description():
         output='screen',
         parameters=[{
             'robot_description': ParameterValue(robot_description, value_type=str),
-            'frame_prefix': [namespace,'/'],        
+            'frame_prefix': [namespace, '/'],        
             'use_sim_time': use_sim_time
         }],
     )
@@ -81,13 +80,12 @@ def generate_launch_description():
         arguments=['-topic', 'robot_description',
                     '-entity', namespace,
                     '-robot_namespace', namespace,
-                    # 'reference_frame', 'world',
                     '-x', x, '-y', y, '-Y', yaw],
         output='screen'
     )
     
     # Set a static transformation from the robot's odometry frame to the global map frame
-    odom_topic = [namespace,'/odom']
+    odom_topic = [namespace, '/odom']
     tf_map_to_odom = Node(
         package='tf2_ros', executable='static_transform_publisher',
         parameters=[{'use_sim_time': use_sim_time}],
@@ -95,12 +93,36 @@ def generate_launch_description():
         arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'map', odom_topic],
     )
 
-    # Start the aruco marker detection
+    #Start the aruco marker detection
     aruco_recognition = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(get_package_share_directory(package_name_robot), 'launch'), '/aruco_recognition.launch.py']),
         launch_arguments={
             'namespace': namespace,
         }.items()
+    )
+
+    #Add ArUco node for marker detection
+    aruco_node = Node(
+        package='ros2_aruco',
+        executable='aruco_node',
+        namespace=namespace,
+        parameters=[
+            {"marker_size": 0.5},  # The size of the Aruco marker in meters
+            {"aruco_dictionary_id": "DICT_5X5_250"},  # Type of Aruco marker dictionary
+            {"image_topic": "camera/image_raw"},  # Camera image topic
+            {"camera_info_topic": "camera/camera_info"}  # Camera info topic
+        ],
+        output='screen',
+    )
+
+    #Add the marker recognition node to transform poses to the map frame
+    marker_recognition = Node(
+        package='multi_robot_challenge_23',
+        executable='marker_recognition',  # Your MarkerMapPose node
+        name='marker_recognition',
+        namespace=namespace,
+        parameters=[{"namespace": namespace}],
+        output='screen',
     )
 
     return LaunchDescription([
@@ -112,5 +134,7 @@ def generate_launch_description():
         robot_state_publisher,
         spawn_entity,
         tf_map_to_odom,
-        aruco_recognition,
+        aruco_recognition,  #Include ArUco marker detection launch file
+        aruco_node,  #Add ArUco detection node
+        marker_recognition  #Add marker recognition node
     ])
