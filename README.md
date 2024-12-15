@@ -19,13 +19,13 @@ This project is the semester project of group 30 in the DAT160 course.
     cd multi_robot_challenge_23
     ```
 ## Usage
-To launch the simulation, use the following command:
+To launch the simulation, use the following command. Substitute X with a number 1-5. Note that the "meeting at big fire"-behaviour only works for world 1:
 ```sh
-ros2 launch multi_robot_challenge_23 rescue_robots_w1.launch.py
+ros2 launch multi_robot_challenge_23 rescue_robots_wX.launch.py
 ```
 After the simualtion has launched and has had some time to initalize the services, run the main script:
 ```sh
-ros2 run multi_robot_challenge_23 central_controller
+ros2 run multi_robot_challenge_23 main_controller
 ```
 
 ## Testing
