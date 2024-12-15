@@ -6,7 +6,7 @@
 - [Usage](#usage)
 
 ## Introduction
-This project is the semester project of group 30 in the DAT160 course.
+This project is the semester project of group 30 in the DAT160 course. Due to time constraints, the project is unfortunatly not complete.
 
 ## Installation
 1. Clone the repository:
