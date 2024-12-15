@@ -4,7 +4,6 @@
 - [Introduction](#introduction)
 - [Installation](#installation)
 - [Usage](#usage)
-- [License](#license)
 
 ## Introduction
 This project is the semester project of group 30 in the DAT160 course.
