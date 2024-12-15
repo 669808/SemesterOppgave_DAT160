@@ -152,6 +152,9 @@ class FrontierBasedSearch(Node):
   
     
     def update_frontier_map(self, robot_current_pos):
+
+        self.frontier_centroids = []
+
         if self.map_data is None:
             self.get_logger().warn("Map data is not initialized.")
             return False
@@ -339,6 +342,9 @@ class FrontierBasedSearch(Node):
         for angle_rad, distance_metres in zip(angles_radians, ranges):
             if distance_metres < msg.range_min or distance_metres > msg.range_max:
                 distance_metres = msg.range_max
+
+            if distance_metres > 2.5:
+                distance_metres = 2.5
 
             distance = distance_metres / self.map_info.resolution
 

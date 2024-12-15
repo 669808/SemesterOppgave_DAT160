@@ -16,13 +16,13 @@ setup(
         (os.path.join('share', package_name, 'worlds'), glob(os.path.join('worlds', '*.world'))),
         (os.path.join('share', package_name, 'rviz'), glob(os.path.join('rviz', '*.rviz'))),
         (os.path.join('share', package_name, 'urdf'), glob(os.path.join('urdf', '*.xacro'))),
-        (os.path.join('share', package_name, 'maps'), glob(os.path.join('maps', '*'))),
+        (os.path.join('share', package_name, 'maps'), glob(os.path.join('maps', '*'))), 
     ],
-    install_requires=['setuptools'],
+    install_requires=['setuptools'], 
     zip_safe=True,
     maintainer='hvlrobotics',
     maintainer_email='hvlrobotics@todo.todo',
-    description='TODO: Package description',
+    description='Multi Robot Challenge with Aruco Marker Detection',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
@@ -36,6 +36,7 @@ setup(
             'map_filter = multi_robot_challenge_23.map_filter:main',
             'turtlebot3 = multi_robot_challenge_23.turtlebot3:main',
             'main_controller = multi_robot_challenge_23.main_controller:main',
+            'aruco_marker_publisher = multi_robot_challenge_23.aruco_marker_publisher:main',  #Adding Aruco functionality
         ],
     },
 )
