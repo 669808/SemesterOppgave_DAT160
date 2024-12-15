@@ -93,7 +93,6 @@ def generate_launch_description():
         arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'map', odom_topic],
     )
 
-    #Start the aruco marker detection
     aruco_recognition = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(get_package_share_directory(package_name_robot), 'launch'), '/aruco_recognition.launch.py']),
         launch_arguments={
@@ -101,29 +100,6 @@ def generate_launch_description():
         }.items()
     )
 
-    #Add ArUco node for marker detection
-    aruco_node = Node(
-        package='ros2_aruco',
-        executable='aruco_node',
-        namespace=namespace,
-        parameters=[
-            {"marker_size": 0.5},  # The size of the Aruco marker in meters
-            {"aruco_dictionary_id": "DICT_5X5_250"},  # Type of Aruco marker dictionary
-            {"image_topic": "camera/image_raw"},  # Camera image topic
-            {"camera_info_topic": "camera/camera_info"}  # Camera info topic
-        ],
-        output='screen',
-    )
-
-    #Add the marker recognition node to transform poses to the map frame
-    marker_recognition = Node(
-        package='multi_robot_challenge_23',
-        executable='marker_recognition',  # Your MarkerMapPose node
-        name='marker_recognition',
-        namespace=namespace,
-        parameters=[{"namespace": namespace}],
-        output='screen',
-    )
 
     return LaunchDescription([
         namespace_launch_arg,
@@ -134,7 +110,5 @@ def generate_launch_description():
         robot_state_publisher,
         spawn_entity,
         tf_map_to_odom,
-        aruco_recognition,  #Include ArUco marker detection launch file
-        aruco_node,  #Add ArUco detection node
-        marker_recognition  #Add marker recognition node
+        aruco_recognition, 
     ])
