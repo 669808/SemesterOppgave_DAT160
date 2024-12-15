@@ -15,7 +15,7 @@ def generate_launch_description():
     world_file_path = os.path.join(get_package_share_directory(package_name), 'worlds', 'dat160_w4.world')
     map_file_path = os.path.join(get_package_share_directory(package_name), 'maps', 'map_dat160_w4.yaml')
     rviz_config_file_path = os.path.join(get_package_share_directory(package_name), 'rviz', 'model.rviz')
-
+    aruco_recognition_launch_file = os.path.join(get_package_share_directory(package_name), 'launch', 'aruco_recognition.launch.py') #added aruco_recognition_launch file.
     # Namespace of each robot
     first_tb3 = 'tb3_0'
     second_tb3 = 'tb3_1'
@@ -145,6 +145,15 @@ def generate_launch_description():
             ('/cmd_vel', '/tb3_0/cmd_vel'),  
         ]
     )
+    
+    aruco_tb3_0 = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(aruco_recognition_launch_file),
+        launch_arguments={'namespace': 'tb3_0'}.items()
+    )
+    aruco_tb3_1 = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(aruco_recognition_launch_file),
+        launch_arguments={'namespace': 'tb3_1'}.items()
+    )
 
     return LaunchDescription([
         sim_time_arg,
@@ -159,5 +168,7 @@ def generate_launch_description():
         turtlebot3_0_controller,
         turtlebot3_1_controller,
         map_filter,
-        frontier_search_node
+        frontier_search_node,
+        aruco_tb3_0,
+        aruco_tb3_1,
     ])
