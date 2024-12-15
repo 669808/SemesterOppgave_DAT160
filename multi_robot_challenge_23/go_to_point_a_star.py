@@ -133,10 +133,10 @@ class GoToPointController(Node):
         self.yaw = yaw
 
     def lidar_callback(self, msg):
-        self.lidar_front = min(min(msg.ranges[0:3]), min(msg.ranges[357:359]))
+        self.lidar_front = min(min(msg.ranges[0:10]), min(msg.ranges[350:359]))
 
     def has_crashed(self):
-        return self.lidar_front < 0.2
+        return self.lidar_front < 0.15
     
     def handle_collision(self):
         self.stop_robot()

@@ -176,7 +176,7 @@ class FrontierBasedSearch(Node):
         return True
     
     def addValidCentroids(self, centroids):
-        distance_to_wall_threshold_metres = 0.3
+        distance_to_wall_threshold_metres = 0.35
         existing_centroid_distance_threshold_metres = 0.5 
 
         centroid_threshold = int(existing_centroid_distance_threshold_metres / self.map_info.resolution)
@@ -297,7 +297,6 @@ class FrontierBasedSearch(Node):
             self.get_logger().info("No frontiers found")
             return None
 
-        # Use a BFS approach to find the nearest frontier
         queue = deque([robot_pos])
         visited = set()
         visited.add(robot_pos)
@@ -344,7 +343,7 @@ class FrontierBasedSearch(Node):
                 distance_metres = msg.range_max
 
             if distance_metres > 2.5:
-                distance_metres = 2.5
+                distance_metres = 2.0
 
             distance = distance_metres / self.map_info.resolution
 

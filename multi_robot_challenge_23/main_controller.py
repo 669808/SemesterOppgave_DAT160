@@ -102,9 +102,12 @@ class MainController(Node):
     def send_help_requests(self, position):
         request = SetGoal.Request()
         request.target_position = position
-        request.target_position.y -= 0.5
+
+
+        request.target_position.x += 1.0
         self.tb3_0_client.call_async(request)
-        request.target_position.y += 1.0
+        request.target_position.x -= 1.0
+        request.target_position.y -= 1.0
         self.tb3_1_client.call_async(request)
         self.get_logger().info('Help request sent!')
 
