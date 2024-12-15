@@ -17,7 +17,7 @@ def generate_launch_description():
     map_file_path = os.path.join(get_package_share_directory(package_name), 'maps', 'map_dat160_w1.yaml')
     rviz_config_file_path = os.path.join(get_package_share_directory(package_name), 'rviz', 'model.rviz')
     aruco_recognition_launch_file = os.path.join(get_package_share_directory(package_name), 'launch', 'aruco_recognition.launch.py') #added aruco_recognition_launch file.
-
+    
     # Namespace of each robot
     first_tb3 = 'tb3_0'
     second_tb3 = 'tb3_1'
@@ -86,16 +86,21 @@ def generate_launch_description():
         }.items()
     )
 
+    aruco_tb3_0 = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(aruco_recognition_launch_file),
+        launch_arguments={'namespace': 'tb3_0'}.items()
+    )
+    aruco_tb3_1 = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(aruco_recognition_launch_file),
+        launch_arguments={'namespace': 'tb3_1'}.items()
+    )
+    
+
+
     # scoring = Node(
     #      package='scoring',
     #      executable='scoring',
     #      name='scoring'
-    # )
-
-    # Include the ArUco recognition launch file
-    # aruco_recognition = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource(aruco_recognition_launch_file),
-    #     launch_arguments={'namespace': first_tb3}.items(),  
     # )
 
     # Starting rviz
@@ -161,7 +166,6 @@ def generate_launch_description():
         ]
     )
 
-
     return LaunchDescription([
         sim_time_arg,
         gazebo,
@@ -178,4 +182,6 @@ def generate_launch_description():
         go_to_point_server_tb3_0,
         go_to_point_server_tb3_1,
         frontier_search_node,
+        aruco_tb3_0,
+        aruco_tb3_1,
     ])
