@@ -147,15 +147,6 @@ def generate_launch_description():
         ]
     )
 
-    aruco_tb3_0 = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(aruco_recognition_launch_file),
-        launch_arguments={'namespace': 'tb3_0'}.items()
-    )
-    aruco_tb3_1 = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(aruco_recognition_launch_file),
-        launch_arguments={'namespace': 'tb3_1'}.items()
-    )
-
     return LaunchDescription([
         sim_time_arg,
         gazebo,
@@ -170,7 +161,5 @@ def generate_launch_description():
         turtlebot3_1_controller,
         map_filter,
         frontier_search_node,
-        aruco_tb3_0,
-        aruco_tb3_1,
 
     ])

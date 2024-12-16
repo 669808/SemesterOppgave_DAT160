@@ -86,17 +86,6 @@ def generate_launch_description():
         }.items()
     )
 
-    aruco_tb3_0 = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(aruco_recognition_launch_file),
-        launch_arguments={'namespace': 'tb3_0'}.items()
-    )
-    aruco_tb3_1 = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(aruco_recognition_launch_file),
-        launch_arguments={'namespace': 'tb3_1'}.items()
-    )
-    
-
-
     # scoring = Node(
     #      package='scoring',
     #      executable='scoring',
@@ -178,10 +167,7 @@ def generate_launch_description():
         turtlebot3_0_controller,
         turtlebot3_1_controller,
         # scoring,
-        # aruco_recognition,  
         go_to_point_server_tb3_0,
         go_to_point_server_tb3_1,
         frontier_search_node,
-        aruco_tb3_0,
-        aruco_tb3_1,
     ])
