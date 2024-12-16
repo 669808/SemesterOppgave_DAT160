@@ -27,3 +27,7 @@ After the simualtion has launched and has had some time to initalize the service
 ros2 run multi_robot_challenge_23 main_controller
 ```
 
+You can view the system in action here:
+https://www.youtube.com/watch?v=L6QqqiK6YXU&ab_channel=%C3%85smundVassbotn
+
+
