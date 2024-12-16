@@ -8,7 +8,6 @@ from geometry_msgs.msg import Pose
 from nav_msgs.msg import Odometry
 from std_srvs.srv import SetBool
 
-
 class TurtleBot3(Node):
     def __init__(self):
         super().__init__('turtlebot3')
@@ -89,14 +88,6 @@ class TurtleBot3(Node):
             self.marker_id_callback,
             10
         )
-
-        # Could not get scoring working in time
-        # self.reporting_client = self.create_client(
-        #     SetMarkerPosition,
-        #     '/set_marker_position',
-        # )
-        # while self.reporting_client.wait_for_service(timeout_sec=2.0):
-        #     self.get_logger().info('Waiting for service: reporting_client')
 
         self.state = 'request_frontier'
 
@@ -262,22 +253,6 @@ class TurtleBot3(Node):
             return
         
         self.get_logger().info(f"Marker with id: {id} detected at location: x={position.x} y={position.y}")
-    #     accepted = self.report_finding(id, position)
-    #     self.get_logger().info(f"Accepted id({id}) status: {accepted}")
-
-    # def report_finding(self, id, pos: Point):
-    #     request = SetMarkerPosition.Request()
-    #     request.marker_id = id
-    #     request.marker_position = pos
-    #     future = self.reporting_client.call_async(request)
-    #     return future.add_done_callback(self.handle_report_response)
-
-    # def handle_report_response(self, future):
-    #     try:
-    #         response = future.result()
-    #         return response.accepted
-    #     except Exception as e:
-    #         self.get_logger().error(f'Error: {e}')
 
 def main(args=None):
     rclpy.init(args=args)
